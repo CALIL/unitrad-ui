@@ -1,0 +1,63 @@
+@charset "utf-8"
+
+/* サイドバー
+.emside
+    padding-top: 3rem
+    transition: opacity 0.7s
+    transition-delay: 0.7s
+    visibility: visible
+    > .sidelogo
+        margin-top: 15px
+        border-top: solid 1px #cbcbcb
+        .poweredby
+            margin-top: 1.3rem
+            margin-left: 5px
+    &.empty
+        opacity: 0
+        transition-delay: 0s
+        visibility: hidden
+        transition: opacity 0.7s, visibility 0s
+    > .block
+        margin-bottom: 0.7rem
+        font-size: 1.4rem
+        &:last-child
+            border-bottom: solid 1px #cbcbcb
+        > p
+            font-size: 1.6rem
+            padding-bottom: 0.7rem
+            padding-top: 1rem
+            vertical-align: middle
+            margin-top: 0
+            margin-bottom: 1rem
+            color: #666666
+            font-weight: bold
+            text-align: left
+            border-bottom: solid 1px #cbcbcb
+        > .items
+            a
+                text-decoration: none
+            button, a
+                color: #0074D9
+                border: 0
+                display: block
+                width: 100%
+                text-align: left
+                background-color: #fff
+                cursor: pointer
+                font-size: 1.4rem
+                line-height: 3rem
+                transition: background-color 0.1s
+                padding: 1px 6px
+                &:hover, &:focus
+                    background-color: #eee
+                &:focus
+                    transition: none
+                &.active
+                    font-weight: 600
+                    color: #666
+            a.external
+                // border-top: dashed 1px #cbcbcb
+                // padding-top: 0.7rem
+                // margin-top: 0.7rem
+                &:hover, &:focus
+                    background: #eee url('assets/external.png') no-repeat 95% center

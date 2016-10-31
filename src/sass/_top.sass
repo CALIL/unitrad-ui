@@ -1,0 +1,262 @@
+@charset "utf-8"
+
+/* トップ（検索ボックス）*/
+
+.emtop
+    // 共通設定
+    background: $themeColor
+    input[type="text"], input[type="search"]
+        transition: box-shadow 0.4s
+        border: 0
+        &:-ms-input-placeholder
+            color: #999 !important
+        &::-webkit-input-placeholder
+            transition: opacity 0.2s
+            color: #777
+        &:focus
+            box-shadow: inset 0 0 3px #969696
+            outline: none
+            &::-webkit-input-placeholder
+                opacity: 0
+
+    // 簡易検索
+    &.simple
+        $buttonWidth: 120px
+        $width: 500px
+
+        > .container
+            padding-top: 30px
+            padding-bottom: 10px
+            max-width: $width
+            margin: 0 auto
+
+            > .box
+                height: 3.5rem
+                border-radius: 4px
+                overflow: hidden
+                input
+                    display: inline-block
+                    width: calc(100% - #{$buttonWidth})
+                    color: #4C4C4C
+                    font-size: 2rem
+                    height: 3.5rem
+                    line-height: 2.3rem
+                    padding: 0.5rem 0.5rem 0.5rem 0.8rem
+                input::-ms-clear
+                    display: none
+
+                button
+                    cursor: pointer
+                    height: 3.5rem
+                    width: $buttonWidth
+                    color: #ffffff
+                    background: $blue
+                    font-size: 1.5rem
+                    font-weight: 600
+                    vertical-align: top
+                    line-height: 1.5rem
+                    border: none
+                    transition: background-color 0.2s
+                    &:hover
+                        background-color: $blue-hover
+                    &:focus
+                        background-color: $blue-hover
+                        //outline: none
+
+            > .advanced
+                //display: inline-block
+                cursor: pointer
+                color: #ffffff
+                padding: 7px 0 2px
+                font-size: 1.2rem
+                border: 0
+                border-bottom: 1px solid rgba(255, 255, 255, 0)
+                transition: border-bottom 0.2s
+                background: none
+                &:hover
+                    border-bottom: 1px solid #ffffff
+        @media screen and (max-width: 768px)
+            background-color: #fff
+            > .container
+                padding-top: 0 !important
+                padding-left: 15px !important
+                padding-right: 15px !important
+                > .box
+                    border: 1px solid #ccc !important
+                    input
+                        &:hover
+                            box-shadow: none !important
+                > .advanced
+                    padding: 10px 0 10px
+                    color: #555 !important
+                    font-size: 1.5rem !important
+    // 詳細検索
+    &.advanced
+        $labelWidth: 60px
+        $width: 500px
+        > .container
+            padding-top: 20px
+            padding-bottom: 20px
+            max-width: $width
+            margin: 0 auto
+            > .items
+                margin-left: -$labelWidth/2
+                > div
+                    display: inline-block
+                    width: $width
+                    //height: 3.5rem
+                    > label
+                        display: inline-block
+                        width: $labelWidth
+                        padding-right: 0.8rem
+                        vertical-align: middle
+                        color: #fff
+                        font-size: 1.3rem
+                        line-height: 3.0rem
+                        text-align: right
+                        height: 3.5rem
+                    > input
+                        display: inline-block
+                        width: $width -$labelWidth
+                        color: #4C4C4C
+                        padding: 0.55rem
+                        vertical-align: top
+                        font-size: 1.5rem
+                        border: 0
+                        border-radius: 2px
+                    > input::-ms-clear
+                        display: none
+                    > input#isbn
+                        -ms-ime-mode: disabled
+                    > span
+                        padding-left: 0.4rem
+                        padding-right: 0.4rem
+                        color: #ddd
+                        font-size: 1.1rem
+                    &.half
+                        width: $width/2
+                        label
+                            width: $labelWidth
+                        input
+                            width: $width/2-$labelWidth
+                        .year
+                            width: 50px !important
+                    &.actions
+                        .simple
+                            margin-left: $labelWidth
+                            cursor: pointer
+                            color: #ffffff
+                            padding: 3px 0 2px
+                            font-size: 1.2rem
+                            border: 0
+                            border-bottom: 1px solid rgba(255, 255, 255, 0)
+                            transition: border-bottom 0.2s
+                            background: none
+                            &:hover
+                                border-bottom: 1px solid #ffffff
+                        #searchButton
+                            margin-top: 3px
+                            width: 100px
+                            border-radius: 2px
+                            float: right
+                            cursor: pointer
+                            height: 3.3rem
+                            color: #ffffff
+                            background: $blue
+                            font-size: 1.4rem
+                            font-weight: 600
+                            vertical-align: top
+                            line-height: 1.5rem
+                            border: none
+                            transition: background-color 0.2s
+                            &:hover
+                                background-color: $blue-hover
+                            &:focus
+                                outline: none
+
+                    &.areas
+                        height: initial
+                        > .selector
+                            display: inline-block
+                            width: $width -$labelWidth
+                            color: #4C4C4C
+                            padding: 0
+                            vertical-align: top
+                            height: 3.0rem
+                            font-size: 1.5rem
+                            overflow: hidden
+                            border: 0
+                            border-radius: 2px
+                            > button
+                                font-size: 1.2rem
+                                height: 3.0rem
+                                padding-left: 0
+                                padding-right: 0
+                                border: 0
+                                width: ($width - $labelWidth) / 8
+                                background-color: rgba(255, 255, 255, 0.5)
+                                transition: background-color 0.2s
+                                vertical-align: middle
+                                &.active
+                                    font-weight: bold
+                                    background-color: #E6E6E6 !important
+                                &:hover
+                                    background-color: rgba(224, 225, 226, 0.9)
+                                &:focus
+                                    outline: none
+                        > .customs
+                            text-align: left
+                            margin-left: $labelWidth
+                            margin-bottom: 10px
+                            padding-bottom: 10px
+                            border-bottom: 1px solid #fff
+                            > div
+                                vertical-align: top
+                                display: inline-block
+                                font-size: 1.2rem
+                                color: #eee
+                                width: ($width - $labelWidth) / 3
+                                text-align: left
+                                > h3
+                                    font-size: 1.4rem
+                                    font-weight: 600
+                                    margin-bottom: 0.3rem
+                                    padding-top: 0
+                                    margin-top: 10px
+                                > div > label
+                                    vertical-align: top
+        @media screen and (max-width: 768px)
+            .container
+                padding-top: 10px
+                padding-bottom: 10px
+                margin-bottom: 10px
+                > .items
+                    margin-left: 0
+                    padding: 0 1rem
+                    > div
+                        width: 100%
+                        > label
+                            display: block
+                            width: 100%
+                            font-size: 1rem
+                            text-align: left
+                            height: 2.25rem
+                        > input
+                            width: 100% !important
+                    .areas
+                        text-align: left !important
+                        .selector
+                            width: 100% !important
+                            // Todo: 京都府立用
+                            button
+                                width: calc(100% / 7) !important
+                                margin: 0
+                    .actions
+                        width: 100%
+                        margin-top: 1rem
+                        > span
+                            margin-left: 0 !important
+                    > div.half
+                        width: 100%
+                        > span
+                            line-height: 3rem

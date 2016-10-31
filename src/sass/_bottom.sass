@@ -1,0 +1,130 @@
+@charset "utf-8"
+
+/* ページネーション
+
+.pagination
+    //user-select: none
+    font-weight: bold
+    text-align: center
+    margin-left: 0
+    margin-top: 0
+    padding: 10px 10px 10px 0
+    background: $gray
+    li
+        display: inline-block
+        list-style: none
+        font-size: 2rem
+        a
+            display: inline-block
+            cursor: pointer
+            color: #157DA9
+            text-decoration: none
+            font-size: 1.6rem
+
+    .page
+        a
+            border: 1px solid #999
+            margin-left: 10px
+            background-color: #fff
+            width: 4rem
+            height: 4rem
+            line-height: 4rem
+            text-align: center
+
+        &.active
+            a
+                color: #000 !important
+                background: #EEE !important
+                border: 2px solid #555 !important
+
+    .break
+        font-size: 1.6rem
+        color: #157DA9
+        pointer-events: none
+
+        margin-left: 10px
+        width: 4rem
+        height: 4rem
+        line-height: 4rem
+        text-align: center
+
+    .previous
+        margin-right: 1rem
+    .next
+        margin-left: 1rem
+
+    & .disabled
+        a
+            cursor: default
+            color: #999999
+
+/* 検索対象図書館
+
+.targetLibraries
+    max-width: 600px
+    margin: 30px auto 0
+    font-size: 1.5rem
+    fieldset
+        display: block
+        border: 1px solid #CCCCCC
+        border-radius: 5px
+        min-height: 15rem
+        legend
+            color: #666666
+            margin: 0 auto
+        // for IE
+        .items
+            padding: 10px
+            .item
+                display: inline-block
+                width: calc(100% / 4)
+                color: #95989A
+                margin-top: 8px
+                margin-bottom: 8px
+                padding-right: 5px
+                text-align: center
+                a
+                    display: inline-block
+                    line-height: 1.5rem
+                    color: #95989A
+                    text-decoration: none
+                    padding-bottom: 0.1rem
+                    border-bottom: 1px solid #95989A
+                    &:hover
+                        color: #777777
+                        border-bottom: 1px solid #777777
+
+@media screen and (max-width: 768px)
+    .targetLibraries
+        fieldset
+            .items
+                .item
+                    width: calc(100% / 2)
+
+@media screen and (max-width: 320px)
+    .targetLibraries
+        fieldset
+            .items
+                .item
+                    width: 100%
+
+/* フッター
+
+.footer
+    &.hide
+        opacity: 0
+    position: fixed
+    bottom: 0
+    width: 100%
+    height: 50px
+    pointer-events: none
+    //background: linear-gradient(rgba(255, 255, 255, 0), white)
+    transition: opacity 0.5s
+    .powered
+        position: absolute
+        bottom: 20px
+        right: 40px
+        a
+            pointer-events: auto
+            img
+                border: none

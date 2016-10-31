@@ -1,0 +1,54 @@
+{
+  "siteUrl": null,
+  "title": "とことんサーチ [東濃地域の本をさがぞう]",
+  "unitrad_options": {
+    "region": "gifu",
+    "holdingOrder": [
+      100949,
+      100936,
+      100914,
+      100854,
+      100908
+    ],
+    "filters": [
+      {
+        "id": 0,
+        "name": "東濃地域",
+        "includes": [
+          100949,
+          100936,
+          100914,
+          100854,
+          100908
+        ]
+      },
+      {
+        "id": 1,
+        "name": "岐阜県全域",
+        "includes": []
+      }
+    ],
+    "welcomeLinks": [
+      {
+        "name": "多治見市図書館",
+        "url": "http://www.lib.tajimi.gifu.jp/"
+      },
+      {
+        "name": "土岐市図書館",
+        "url": "http://www.city.toki.lg.jp/library/"
+      },
+      {
+        "name": "中津川市立図書館",
+        "url": "http://library.city.nakatsugawa.gifu.jp/"
+      },
+      {
+        "name": "瑞浪市民図書館",
+        "url": "http://library.city.mizunami.gifu.jp/tosho/index.HTML"
+      },
+      {
+        "name": "恵那市中央図書館",
+        "url": "http://library.city.ena.lg.jp/"
+      }
+    ]
+  }
+}

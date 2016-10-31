@@ -1,0 +1,385 @@
+@charset "utf-8"
+
+/* 検索結果
+.emresults
+    $authorWidth: 25rem
+    $publisherWidth: 13rem
+    $pubdateWidth: 8rem
+    $isbnWidth: 13rem
+    $holdingsWidth: 6rem
+    $titleWidth: calc(100% - #{$authorWidth+$publisherWidth+$pubdateWidth+$isbnWidth+$holdingsWidth})
+
+    $authorWidth_2: 18rem
+    $publisherWidth_2: 10rem
+    $pubdateWidth_2: 8rem
+    $isbnWidth_2: 13rem
+    $holdingsWidth_2: 6rem
+    $titleWidth_2: calc(100% - #{$authorWidth_2+$publisherWidth_2+$pubdateWidth_2+$isbnWidth_2+$holdingsWidth_2})
+
+    $authorWidth_3: 10rem
+    $publisherWidth_3: 8rem
+    $pubdateWidth_3: 8rem
+    $isbnWidth_3: 13rem
+    $holdingsWidth_3: 6rem
+    $titleWidth_3: calc(100% - #{$authorWidth_3+$publisherWidth_3+$pubdateWidth_3+$isbnWidth_3+$holdingsWidth_3})
+
+    width: 100%
+    margin-right: 15px
+    .poweredby
+        float: right
+    .message
+        font-size: 1.5rem
+        transition: opacity 0.2s
+        line-height: 2rem
+        margin-bottom: 1rem
+        &.empty
+            opacity: 0
+        .notFound
+            line-height: 3rem
+            margin-top: 20px
+            a
+              text-decoration: none
+              &:hover
+                  border-bottom: 1px dashed darkblue
+
+    .results
+        transition: opacity 0.2s
+        visibility: visible
+        &.empty
+            opacity: 0
+            visibility: hidden
+            transition: opacity 0.2s, visibility 0s
+
+        @media screen and (max-width: 768px)
+            border-top: 1px solid #cbcbcb
+        // 各行共通
+        .row
+            color: #333333
+            text-align: left
+            > div
+                display: inline-block
+                overflow: hidden
+                white-space: nowrap
+                padding-right: 15px
+            .title
+                width: $titleWidth
+                padding-left: 10px
+            .author
+                width: $authorWidth
+            .publisher
+                width: $publisherWidth
+            .pubdate
+                width: $pubdateWidth
+            .isbn
+                width: $isbnWidth
+            .holdings
+                width: $holdingsWidth
+                position: relative
+            .aria
+                position: absolute
+                top: 0
+                left: 0
+                right: 0
+                opacity: 0
+                pointer-events: none
+
+
+            @media screen and (max-width: 1280px)
+                .title
+                    width: $titleWidth_2
+                .author
+                    width: $authorWidth_2
+                .publisher
+                    width: $publisherWidth_2
+                .pubdate
+                    width: $pubdateWidth_2
+                .isbn
+                    width: $isbnWidth_2
+                .holdings
+                    width: $holdingsWidth_2
+            @media screen and (max-width: 1024px)
+                .title
+                    width: $titleWidth_3
+                .author
+                    width: $authorWidth_3
+                .publisher
+                    width: $publisherWidth_3
+                .pubdate
+                    width: $pubdateWidth_3
+                .isbn
+                    width: $isbnWidth_3
+                .holdings
+                    width: $holdingsWidth_3
+            @media screen and (max-width: 768px)
+                .title
+                    width: 100%
+                    padding-left: 0
+                .author
+                    width: 100%
+                .publisher
+                    width: 100%
+                .pubdate
+                    width: auto
+                .isbn
+                    width: auto
+                .holdings
+                    width: 100%
+                    display: none
+
+        .header
+            user-select: none
+            border-bottom: solid 1px #cbcbcb
+            > a, span
+                display: inline-block
+                font-size: 1.6rem
+                font-weight: bold
+                padding-bottom: 0
+                padding-top: 1rem
+                vertical-align: middle
+                margin-top: 0
+                margin-bottom: 0.7rem
+            > a.sort
+                cursor: pointer
+                > span.triangle
+                    position: relative
+                    display: inline-block
+                    width: 1rem
+                    height: 1rem
+                    margin-left: 0.75rem
+                    margin-bottom: 0.125rem
+                    opacity: 0
+                    &.ascend
+                        border-left: 1px solid
+                        border-top: 1px solid
+                        transform: rotate(45deg)
+                        -ms-transform: rotate(45deg)
+                        display: inline-block
+                        opacity: 1
+                        top: 0.25rem
+                    &.ascend-fadeout
+                        border-left: 1px solid
+                        border-top: 1px solid
+                        transform: rotate(45deg)
+                        -ms-transform: rotate(45deg)
+                        top: 0.25rem
+                        transition: opacity 0.15s ease
+                    &.descend
+                        border-right: 1px solid
+                        border-bottom: 1px solid
+                        transform: rotate(45deg)
+                        -ms-transform: rotate(45deg)
+                        display: inline-block
+                        opacity: 1
+                        top: -0.25rem
+                    &.descend-fadeout
+                        border-right: 1px solid
+                        border-bottom: 1px solid
+                        transform: rotate(45deg)
+                        -ms-transform: rotate(45deg)
+                        top: -0.25rem
+                        transition: opacity 0.15s ease
+                    &.rotate
+                        animation: triangleSpin 0.15s ease
+                    @keyframes triangleSpin
+                        0%
+                            transform: rotate(-45deg)
+                        100%
+                            transform: rotate(45deg)
+                &:hover
+                    color: #00C0FF
+                    transition: color 0.1s ease 0.05s
+                    > span.triangle
+                        &.ascend, &.descend
+                            border-color: #00C0FF
+                            transition: border-color 0.1s ease 0.05s
+                &:focus
+                    outline: none
+                    color: #00C0FF
+            > a.holdings
+                position: relative
+                > span.triangle
+                    position: absolute
+                    left: -2.45rem
+                    &.ascend
+                        top: 2rem
+                    &.ascend-fadeout
+                        top: 2rem
+                    &.descend
+                        top: 1.5rem
+
+            @media screen and (max-width: 768px)
+                display: none
+
+        .book
+            cursor: pointer
+            border-bottom: 1px solid #BFBFBF
+            //transition: background-color 0.1s,height 0.1s
+            height: 4.5rem
+            @media screen and (max-width: 768px)
+                height: initial
+            overflow: hidden
+            > div
+                font-size: 1.2rem
+                vertical-align: top
+                padding-top: 1rem
+                padding-bottom: 1rem
+                @media screen and (max-width: 768px)
+                    padding-top: 0.2rem
+                    padding-bottom: 0
+
+            .title
+                font-size: 1.7rem
+                height: 3.4rem
+                white-space: normal
+                .volume
+                    padding-left: 5px
+                    font-size: 1.2rem
+                    font-weight: bold
+
+            .author, .publisher, .pubdate, .isbn
+                padding-top: 1.3rem
+
+            @media screen and (max-width: 1280px)
+                .title
+                    font-size: 1.6rem
+                .author
+                    font-size: 1.1rem
+                .publisher
+                    font-size: 1.1rem
+
+            @media screen and (max-width: 1024px)
+                .title
+                    font-size: 1.4rem
+                .author
+                    font-size: 1.1rem
+                .publisher
+                    font-size: 1.1rem
+
+            &:nth-child(2n)
+                background: #FAFAFA
+            &:hover
+                //background-color: #deecf4
+                border-left: 5px solid rgba(0, 192, 255, 0.23)
+                .title
+                    margin-left: -5px
+                    margin-right: 5px
+            .holdings
+                position: relative
+                height: 4rem
+                .count
+                    position: absolute
+                    width: 3rem
+                    height: 3rem
+                    line-height: 3rem
+                    top: 0.7rem
+                    right: 10px
+                    border-radius: 50%
+                    color: #ffffff
+                    text-align: center
+
+                    letter-spacing: 1px
+                    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif
+                    font-size: 1.3rem
+                    font-weight: bold
+                    background-color: #36BF84
+                    opacity: 1
+                    transition: opacity 0.3s
+
+                    &.empty
+                        opacity: 0
+
+                .close
+                    border: 0
+                    color: #ffffff
+                    position: absolute
+                    width: 3rem
+                    height: 3rem
+                    //line-height: 3rem
+                    top: 0.7rem
+                    right: 10px
+                    border-radius: 50%
+                    text-align: center
+                    cursor: pointer
+                    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif
+                    font-size: 1.8rem
+                    z-index: 10000
+                    background-color: #808080
+                    transition: opacity 0.3s
+
+            .detail
+                display: none
+
+        /* 本の選択 詳細表示
+        & .opened
+            cursor: auto
+            position: relative
+            border-left: 5px solid #00C0FF !important
+            border-right: 1px solid #ccc !important
+
+            @media screen and (max-width: 1024px)
+                padding-left: 10px
+
+            .title
+                overflow: visible
+                height: auto
+                margin-left: -5px
+                margin-right: 5px
+            overflow: visible
+            height: auto
+            .detail
+                display: block
+                padding: 10px
+                border-top: 1px dashed #BFBFBF
+                > .links
+                    white-space: normal
+                    line-height: 1.2rem
+                    margin-left: 100px
+                    border-left: 1px solid #ccc
+                    border-right: 1px solid #ccc
+                    padding-left: 10px
+                    margin-right: 0
+                    border-right: none
+
+                    @media screen and (max-width: 1024px)
+                        margin-top: 10px
+                        margin-left: 0
+                        margin-right: 0
+                        padding-left: 0
+                        padding-right: 0
+                        border: 0
+
+                    > a
+                        display: inline-block
+                        padding: 7px
+                        color: #555
+                        cursor: pointer
+                        margin: 5px
+                        border-radius: 4px
+                        width: 80px
+                        text-align: center
+                        font-size: 1.3rem
+                        overflow: hidden
+                        white-space: nowrap
+                        text-decoration: none
+                        background-color: #ececec
+                        box-shadow: 1px 1px 2px #bababa
+                        transition: color 0.2s
+                        &.long
+                            width: 160px + 10px
+                        &:hover
+                            color: #009ac7
+                        &.disabled
+                            cursor: auto
+                            opacity: 0.7 !important
+                            &:hover
+                                color: #555
+                > .count
+                    width: 80px
+                    text-align: right
+                    float: left
+                    padding-top: 5px
+                    font-size: 1.7rem
+                    @media screen and (max-width: 1024px)
+                        width: 100%
+                        float: none
+                        text-align: left
