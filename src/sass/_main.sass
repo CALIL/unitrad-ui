@@ -54,16 +54,19 @@ body
     @media screen and (max-width: 768px)
         flex-direction: column
         margin: 0 15px
+        display: block
         > .emside
             margin-top: 10px
             order: 1
             width: 100%
             margin-left: 0
             margin-right: 0
+            display: block
         > .emresults
             order: 0
             margin-left: 0
             margin-right: 0
+            display: block
 
 .poweredby
     display: inline-block
@@ -100,19 +103,3 @@ body
         border-left: 1px solid $themeColor
         transform: rotate(-45deg)
         -ms-transform: rotate(-45deg)
-
-@if $ie9
-    .emcontainer
-        display: block !important
-
-    .emside
-        float: left !important
-        width: 200px !important
-
-    .emresults
-        float: right !important
-        width: calc(100% - 250px) !important
-
-    @media screen and (min-width: 1600px)
-        .emresults
-            width: 1300px !important

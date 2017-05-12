@@ -1,17 +1,17 @@
+// @flow
 /*
 
  Unitrad UI APIライブラリ
 
- Copyright (c) 2016 CALIL Inc.
+ Copyright (c) 2017 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
 import request from 'superagent';
-import legacyIESupport from 'superagent-legacyiesupport';
 
-var ENDPOINT = 'https://unitrad.calil.jp/v1/';
+const ENDPOINT = 'https://unitrad.calil.jp/v1/';
 const FIELDS = ['free', 'title', 'author', 'publisher', 'isbn', 'ndc', 'year_start', 'year_end', 'region'];
 
 
@@ -22,10 +22,7 @@ const FIELDS = ['free', 'title', 'author', 'publisher', 'isbn', 'ndc', 'year_sta
  * @private
  */
 function _request(command) {
-  var req = request.get(ENDPOINT + command);
-  var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-  if (canUseDOM) req.use(legacyIESupport);
-  return req
+  return request.get(ENDPOINT + command);
 }
 
 
@@ -36,10 +33,13 @@ export class api {
    * @param query - 検索クエリ
    * @param callback - コールバック関数
    */
-  constructor(query, callback) {
+  callback: (data: UnitradResult) => void;
+  killed: boolean;
+  data: UnitradResult;
+
+  constructor(query: UnitradQuery, callback: (data: UnitradResult) => void) {
     this.callback = callback;
     this.killed = false;
-    this.data = null;
     this.search(query);
   }
 
@@ -50,13 +50,13 @@ export class api {
     this.killed = true;
   }
 
-  search(query) {
+  search(query: UnitradQuery) {
     if (!this.killed) {
       _request('search').query(stripQuery(query)).end((err, res) => {
         if (!err) {
           this.receive(res.body);
         } else {
-          setTimeout(()=> this.search(), 1000)
+          setTimeout(() => this.search(query), 1000)
         }
       })
     }
@@ -73,7 +73,7 @@ export class api {
         })
         .end((err, res) => {
           if (res.body === null) {
-            setTimeout(()=> this.polling(), 100)
+            setTimeout(() => this.polling(), 100)
           } else {
             this.receive(res.body)
           }
@@ -81,7 +81,7 @@ export class api {
     }
   }
 
-  receive(data) {
+  receive(data: UnitradResult) {
     if (!this.killed) {
       if (data.books_diff) {
         Array.prototype.push.apply(this.data.books, data.books_diff.insert);
@@ -113,7 +113,7 @@ export class api {
       this.callback(this.data);
       if (data.running === true) {
         console.log('[Unitrad] continue...');
-        setTimeout(()=> this.polling(), 500);
+        setTimeout(() => this.polling(), 500);
       } else {
         console.log('[Unitrad] complete.');
       }
@@ -127,10 +127,10 @@ export class api {
  * @param query
  * @returns {Object}
  */
-export function normalizeQuery(query) {
-  var tmp = {};
+export function normalizeQuery(query: UnitradQueryLoose): UnitradQuery {
+  let tmp = {};
   for (let k of FIELDS) {
-    tmp[k] = (query.hasOwnProperty(k)) ? query[k] : '';
+    tmp[k] = query[k] ? query[k] : '';
   }
   return tmp
 }
@@ -142,7 +142,7 @@ export function normalizeQuery(query) {
  * @param query
  * @returns {boolean}
  */
-export function isEmptyQuery(query) {
+export function isEmptyQuery(query: ?UnitradQuery): boolean {
   if (query) {
     for (let k of FIELDS) {
       if (k === 'region') continue;
@@ -159,7 +159,7 @@ export function isEmptyQuery(query) {
  * @param q2 比較先クエリ
  * @returns {boolean}
  */
-export function isEqualQuery(q1, q2) {
+export function isEqualQuery(q1: UnitradQuery, q2: UnitradQuery): boolean {
   for (let k of FIELDS) {
     if (k === 'region') continue;
     if ((q1 && q1.hasOwnProperty(k) ? q1[k] : '') !== (q2 && q2.hasOwnProperty(k) ? q2[k] : '' )) return false
@@ -173,8 +173,8 @@ export function isEqualQuery(q1, q2) {
  * @param query
  * @returns {Object} query
  */
-export function stripQuery(query) {
-  var tmp = {};
+export function stripQuery(query: UnitradQuery): UnitradQuery {
+  let tmp = {};
   for (let k of FIELDS) {
     if (query.hasOwnProperty(k) && query[k] !== '') {
       tmp[k] = query[k];
@@ -188,7 +188,7 @@ export function stripQuery(query) {
  * @param region {String} リージョン
  * @param callback(data) コールバック関数
  */
-export function fetchMapping(region, callback) {
+export function fetchMapping(region: string, callback: (data: any) => void): void {
   _request('mapping').query({'region': region}).end((err, res) => {
     callback(res.body)
   })

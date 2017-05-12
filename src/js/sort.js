@@ -1,20 +1,19 @@
+// @flow
 /*
 
  Unitrad UI ソート関連
 
- Copyright (c) 2016 CALIL Inc.
+ Copyright (c) 2017 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
-function _exclude(holdings, excludes) {
-  if (holdings) {
-    excludes.forEach((libid)=> {
-      var i = holdings.indexOf(libid);
-      if (i !== -1) holdings.splice(i, 1);
-    });
-  }
+function _exclude(holdings: ?Array<number>, excludes: Array<number>) {
+  excludes.forEach((libid) => {
+    let i = holdings ? holdings.indexOf(libid) : -1;
+    if (i !== -1 && holdings) holdings.splice(i, 1);
+  });
 }
 
 /**
@@ -23,9 +22,9 @@ function _exclude(holdings, excludes) {
  * @param books 検索結果リスト
  * @param excludes 除外図書館IDのリスト
  */
-export function processExcludes(books, excludes) {
+export function processExcludes(books: ?Array<UnitradBook>, excludes: Array<number>): void {
   if (books) {
-    books.forEach((book)=> {
+    books.forEach((book) => {
       _exclude(book.holdings, excludes);
       _exclude(book.estimated_holdings, excludes);
     });
@@ -38,22 +37,22 @@ export function processExcludes(books, excludes) {
  * @param books
  * @param includes
  */
-export function applyIncludes(books, includes) {
+export function applyIncludes(books: Array<UnitradBook>, includes: Array<number>): Array<UnitradBook> {
   if (!books || includes.length === 0) return books;
-  return books.filter((b)=> {
-    return includes.some((id)=> {
+  return books.filter((b) => {
+    return includes.some((id) => {
       return (b.holdings.indexOf(id) !== -1 || (b.estimated_holdings && b.estimated_holdings.indexOf(id) !== -1))
     });
   });
 }
 
 
-export function filterRemains(remains, includes, name_to_id) {
+export function filterRemains(remains: Array<string>, includes: Array<number>, name_to_id: {}): Array<string> {
   if (includes.length === 0 || remains.length === 0 || !name_to_id) return remains;
-  var tmp = [];
-  remains.forEach((name)=> {
+  let tmp = [];
+  remains.forEach((name) => {
     if (name_to_id[name]) {
-      let hit = name_to_id[name].some((id)=> {
+      let hit = name_to_id[name].some((id) => {
         return (includes.indexOf(id) !== -1)
       });
       if (hit) tmp.push(name);
@@ -68,12 +67,12 @@ export function filterRemains(remains, includes, name_to_id) {
  * @param data
  * @param name_to_id
  */
-export function unresolvedHoldings(data, name_to_id) {
-  var unresolved = [];
-  var remains = data.remains.concat(data.errors);
-  remains.forEach((name)=> {
+export function unresolvedHoldings(data: UnitradResult, name_to_id: {[string]:Array<number>}): Array<number> {
+  let unresolved = [];
+  let remains = data.remains.concat(data.errors);
+  remains.forEach((name) => {
     if (name_to_id.hasOwnProperty(name)) {
-      name_to_id[name].forEach((id)=> {
+      name_to_id[name].forEach((id) => {
         if (unresolved.indexOf(id) === -1) {
           unresolved.push(id);
         }
@@ -89,10 +88,10 @@ export function unresolvedHoldings(data, name_to_id) {
  * @param includes {array} フィルタ（長さ0の場合はすべて）
  * @returns {number} 所蔵館数
  */
-export function countHoldings(holdings, includes) {
+export function countHoldings(holdings: Array<number>, includes: Array<number>): number {
   if (includes.length === 0)  return holdings.length;
-  var count = 0;
-  includes.forEach((id)=> {
+  let count = 0;
+  includes.forEach((id) => {
     if (holdings.indexOf(id) !== -1) count++;
   });
   return count
@@ -105,8 +104,8 @@ export function countHoldings(holdings, includes) {
  * @param includes フィルタ（長さ0の場合はすべて）
  * @returns {number} 所蔵館数
  */
-export function holdingsFromBook(book, includes) {
-  var _holdings = book.holdings.concat();
+export function holdingsFromBook(book: UnitradBook, includes: Array<number>): number {
+  let _holdings = book.holdings.concat();
   if (book.estimated_holdings) _holdings = [...new Set(_holdings.concat(book.estimated_holdings))];
   return countHoldings(_holdings, includes);
 }
@@ -118,12 +117,12 @@ export function holdingsFromBook(book, includes) {
  * @param b {Array} 所蔵リスト
  * @returns {Array}
  */
-export function intersectHoldings(a, b) {
+export function intersectHoldings(a: Array<number>, b: Array<number>) {
   if (!a || !b) return [];
   return a.filter(x => b.indexOf(x) !== -1);
 }
 
-function _stringSorter(a, b) {
+function _stringSorter(a: string, b: string): number {
   if (!b && a) return -1;
   if (!a && b) return 1;
   if (a > b) return 1;
@@ -137,8 +136,8 @@ function _stringSorter(a, b) {
  * @param b {Object} 書誌データ
  * @returns {Number}
  */
-function titleSorter(a, b) {
-  var _x = _stringSorter(a.title, b.title);
+function titleSorter(a: UnitradBook, b: UnitradBook): number {
+  let _x = _stringSorter(a.title, b.title);
   if (_x === 0) _x = _stringSorter(a.volume, b.volume);
   if (_x === 0) _x = _stringSorter(a.id, b.id);
   return _x;
@@ -150,8 +149,8 @@ function titleSorter(a, b) {
  * @param b {Object} 書誌データ
  * @returns {Number}
  */
-function authorSorter(a, b) {
-  var _x = _stringSorter(a.author, b.author);
+function authorSorter(a: UnitradBook, b: UnitradBook): number {
+  let _x = _stringSorter(a.author, b.author);
   return (_x === 0) ? titleSorter(a, b) : _x;
 }
 
@@ -161,8 +160,8 @@ function authorSorter(a, b) {
  * @param b {Object} 書誌データ
  * @returns {Number}
  */
-function publisherSorter(a, b) {
-  var _x = _stringSorter(a.publisher, b.publisher);
+function publisherSorter(a: UnitradBook, b: UnitradBook): number {
+  let _x = _stringSorter(a.publisher, b.publisher);
   return (_x === 0) ? titleSorter(a, b) : _x;
 }
 
@@ -172,13 +171,13 @@ function publisherSorter(a, b) {
  * @param b {Object} 書誌データ
  * @returns {Number}
  */
-function isbnSorter(a, b) {
-  var _x = _stringSorter(a._isbn, b._isbn);
+function isbnSorter(a: UnitradBook, b: UnitradBook): number {
+  let _x = _stringSorter(a._isbn, b._isbn);
   if (_x === 0) _x = _stringSorter(a.isbn, b.isbn);
   return _x;
 }
 
-function pubdateSorter(a, b) {
+function pubdateSorter(a: UnitradBook, b: UnitradBook): number {
   if (a._pubdate === 0 && b._pubdate === 0) return 0;
   if (a._pubdate === 0) return 1;
   if (b._pubdate === 0) return -1;
@@ -193,9 +192,9 @@ function pubdateSorter(a, b) {
  * ・無効な桁数は空文字列を返す
  * @type {RegExp}
  */
-export function normalizeIsbn(isbn) {
+export function normalizeIsbn(isbn: string): string {
   if (!isbn) return '';
-  var _tmp = isbn.replace(/[-]+/g, '');
+  let _tmp = isbn.replace(/[-]+/g, '');
   if (_tmp.length === 10 || _tmp.length === 13) {
     return _tmp;
   }
@@ -210,17 +209,17 @@ export function normalizeIsbn(isbn) {
  * @param {String || Number} p
  * @returns {Number}
  */
-export function normalizePubdate(p) {
-  var _p = String(p).replace(/元年/g, "1年");
-  var _tmp = _p.match(/\d+/g);
+export function normalizePubdate(p: string): number {
+  let _p = String(p).replace(/元年/g, "1年");
+  let _tmp = _p.match(/\d+/g);
   if (_tmp) {
     if (_tmp.length === 1 && _tmp[0].length > 4) {
       return parseInt((_tmp[0] + '00000000').slice(0, 8), 10);
     }
     if (_tmp.length >= 1) {
-      var _month = 0;
-      var _day = 0;
-      var _year = parseInt(_tmp[0], 10);
+      let _month = 0;
+      let _day = 0;
+      let _year = parseInt(_tmp[0], 10);
       if (_year < 100) {
         if (_p.indexOf('昭和') !== -1) _year = 1926 + _year - 1;
         if (_p.indexOf('平成') !== -1) _year = 1989 + _year - 1;
@@ -250,9 +249,9 @@ export function normalizePubdate(p) {
  * @param reverse {Boolean} 逆順フラグ
  * @param includes
  */
-export function applySort(books, column, reverse, includes) {
+export function applySort(books: Array<UnitradBook>, column: string, reverse: boolean, includes: Array<number>) {
   if (!books || column === '') return books;
-  var _books = books.concat();
+  let _books = books.concat();
   switch (column) {
     case 'title':
       _books.sort(titleSorter);
@@ -264,16 +263,16 @@ export function applySort(books, column, reverse, includes) {
       _books.sort(publisherSorter);
       break;
     case 'isbn':
-      _books.map((book)=> book._isbn = normalizeIsbn(book.isbn));
+      _books.map((book) => book._isbn = normalizeIsbn(book.isbn));
       _books.sort(isbnSorter);
       break;
     case 'pubdate':
-      _books.map((book)=> book._pubdate = normalizePubdate(book.pubdate));
+      _books.map((book) => book._pubdate = normalizePubdate(book.pubdate));
       _books.sort(pubdateSorter);
       break;
     case 'holdings':
-      _books.map(book=>book._holdings = holdingsFromBook(book, includes));
-      _books.sort((a, b)=> a._holdings - b._holdings);
+      _books.map(book => book._holdings = holdingsFromBook(book, includes));
+      _books.sort((a, b) => a._holdings - b._holdings);
       break;
   }
   if (reverse) _books.reverse();

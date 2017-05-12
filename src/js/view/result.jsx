@@ -1,8 +1,9 @@
+// @flow
 /*
 
  Unitrad UI 検索結果
 
- Copyright (c) 2016 CALIL Inc.
+ Copyright (c) 2017 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
@@ -19,19 +20,58 @@ import {
 import {processExcludes, applyIncludes, applySort, filterRemains} from '../sort.js'
 import Book from './book.jsx';
 
+
+type State = {
+  result: ?UnitradResult,
+  selected_id: ?string,
+  sort_column: string,
+  sort_order: '' | 'descend' | 'ascend',
+  sort_class: Array<string>,
+  page: number,
+  established_query?: UnitradQuery
+};
+
+type Props = {
+  filters: Array<UIFilter>,
+  excludes: Array<number>,
+  selected_id: ?string,
+  query: UnitradQuery,
+  region: string,
+  includes: Array<number>,
+  name_to_id: { [string]: Array<number> },
+  libraries: { [number]: string },
+  lazyHidden: Array<string>,
+  externalLinks: Array<UIExternal>,
+  holdingLinkReplacer: ?Function,
+  holdingOrder: Array<number>,
+  rows: number,
+  customHoldingView: Function,
+  customDetailView: Function,
+  changeFilter: Function
+};
+
+
 export default class Results extends React.Component {
-  constructor(props) {
+  props: Props;
+  state: State;
+  _query: UnitradQuery;
+  api: api;
+  started: number;
+  ariaTime: ?number;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       page: 0,
       result: null,
       selected_id: this.props.selected_id,
-      sort_column: null,
-      sort_order: '' // descend || ascend
+      sort_column: '',
+      sort_order: '',
+      sort_class: []
     };
   }
 
-  doUpdate(data) {
+  doUpdate(data: UnitradResult) {
     processExcludes(data.books, this.props.excludes); // 除外データを削除する
     this.setState({'result': data});
   }
@@ -58,7 +98,6 @@ export default class Results extends React.Component {
   }
 
   componentDidUpdate() {
-    console.log('result componentDidUpdate');
     this.componentDidMount();
   }
 
@@ -66,28 +105,27 @@ export default class Results extends React.Component {
     if (this.api) this.api.kill();
   }
 
-  onSelectBook(e) {
-    if (window.getSelection().toString() != '') return; // 選択中はクリックを処理しない
-    var current = e.target;
-    while (current.parentNode) {
+  onSelectBook(e: SyntheticInputEvent) {
+    if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
+    let current: ?Element = e.target;
+    while (current && current.parentNode) {
       if (current.attributes.getNamedItem('data-id')) {
         let hash = current.attributes.getNamedItem('data-id').value;
         if (history.pushState && history.state !== undefined) {
-          history.pushState('selected_id', null, location.pathname + location.search + '#' + hash);
+          history.pushState('selected_id', '', location.pathname + location.search + '#' + hash);
         }
         this.setState({'selected_id': hash});
         break
       }
-      current = current.parentNode;
+      current = current.parentElement;
     }
   }
 
   // #(hash)を消す
   removeHash() {
     if (location.hash !== '') {
-      // history.pushState対応ブラウザか？
       if (history.pushState && history.state !== undefined) {
-        history.replaceState('search', null, location.pathname + location.search);
+        history.replaceState('search', '', location.pathname + location.search);
       } else {
         location.hash = '';
       }
@@ -100,19 +138,19 @@ export default class Results extends React.Component {
     this.setState({'selected_id': null});
   }
 
-  handlePageClick(data) {
+  handlePageClick(data: { selected: number }) {
     this.removeHash();
     this.setState({page: data.selected, selected_id: null});
   }
 
-  onSort(e) {
+  onSort(e: SyntheticInputEvent) {
     this.removeHash();
-    let target = e.target;
-    while (!target.className.match('sort')) {
+    let target: null | Element & HTMLElement = e.target;
+    while (target && !target.className.match('sort')) {
       target = target.parentElement;
     }
-    var names = ['triangle'];
-    var column = target.getAttribute('data-sort-column') || target.dataset['sort-column'];
+    let names = ['triangle'];
+    let column = target && target.dataset ? target.dataset.sortColumn : null;
     if (typeof column !== 'string') return;
     const firstOrders = {
       title: 'ascend',
@@ -120,14 +158,14 @@ export default class Results extends React.Component {
       publisher: 'ascend',
       pubdate: 'descend',
       isbn: 'ascend',
-      holdings: 'descend',
+      holdings: 'descend'
     };
-    var nextOrder;
-    var currentOrder = (this.state.sort_column == column) ? this.state.sort_order : '';
-    if (currentOrder == '') {
+    let nextOrder;
+    let currentOrder: string = (this.state.sort_column === column) ? this.state.sort_order : '';
+    if (currentOrder === '') {
       nextOrder = firstOrders[column];
       names.push(nextOrder);
-    } else if (currentOrder == firstOrders[column]) {
+    } else if (currentOrder === firstOrders[column]) {
       nextOrder = firstOrders[column] === 'ascend' ? 'descend' : 'ascend';
       names.push(nextOrder);
       names.push('rotate');
@@ -138,7 +176,7 @@ export default class Results extends React.Component {
     this.setState({page: 0, sort_column: column, sort_order: nextOrder, sort_class: names});
   }
 
-  onSortKeyUp(e) {
+  onSortKeyUp(e: SyntheticInputEvent) {
     e = e || window.event;
     if (e.keyCode === 13) {
       e.stopPropagation();
@@ -146,46 +184,59 @@ export default class Results extends React.Component {
     }
   }
 
-  filterRemains(remains) {
+  filterRemains(remains: Array<string>) {
     return filterRemains(remains, this.props.includes, this.props.name_to_id)
   }
 
   render() {
-    var _books = [];
-    var message;
-    var notfound = false;
+    let _books = [];
+    let message: string;
+    let notfound = false;
     if (this.state.result && this.state.result.books) {
       _books = applyIncludes(this.state.result.books, this.props.includes);
       if (this.state.sort_order !== '') {
-        _books = applySort(_books, this.state.sort_column, this.state.sort_order == 'descend', this.props.includes);
+        _books = applySort(_books, this.state.sort_column, this.state.sort_order === 'descend', this.props.includes);
       }
     }
 
     // メッセージの作成
+
     if (this.state.result && this.state.result.books) {
-      var _remains = this.filterRemains(this.state.result.remains);
-      if (this.state.result.running && _remains.length > 0) {
-        message = _books.length + "件見つかりました。";
-        if (_remains.length < 5 && (this.started && new Date() - this.started > 5000)) {
-          message += _remains + "は時間がかかっています。";
-        } else {
-          message += "あと " + _remains.length + "館。"
-        }
-      } else {
-        if (_books.length > 0) {
-          message = _books.length + "件見つかりました。";
-        } else if (!isEmptyQuery(this.props.query)) {
-          message = "見つかりませんでした。";
-          if (this.state.result && this.state.result.books && this.state.result.books.length === 0) {
-            notfound = true;
+      let _remains: Array<string> = this.filterRemains(this.state.result.remains);
+
+      if (this.state.result && this.state.result.running && _books.length > 10 && this.props.lazyHidden) {
+        for (let name of this.props.lazyHidden) {
+          if (_remains.indexOf(name) !== -1) {
+            _remains.splice(_remains.indexOf(name), 1);
           }
         }
-        var _errors = this.filterRemains(this.state.result.errors);
-        if (_errors.length > 0) {
-          message += _errors + "は検索できませんでした。";
-        }
-        this.ariaTime = null;
       }
+
+      if (this.state.result) {
+        if (this.state.result.running && _remains.length > 0) {
+          message = String(_books.length) + "件見つかりました。";
+          if (_remains.length < 5 && (this.started && new Date() - this.started > 5000)) {
+            message += _remains.join(',') + "は時間がかかっています。";
+          } else {
+            message += "あと " + _remains.length + "館。"
+          }
+        } else {
+          if (_books.length > 0) {
+            message = String(_books.length) + "件見つかりました。";
+          } else if (!isEmptyQuery(this.props.query)) {
+            message = "見つかりませんでした。";
+            if (this.state.result && this.state.result.books && this.state.result.books.length === 0) {
+              notfound = true;
+            }
+          }
+          let _errors = this.filterRemains(this.state.result.errors);
+          if (_errors.length > 0) {
+            message = _errors.join(',') + "は検索できませんでした。";
+          }
+          this.ariaTime = null;
+        }
+      }
+
     } else {
       if (isEmptyQuery(this.props.query)) {
         message = "";
@@ -193,7 +244,7 @@ export default class Results extends React.Component {
         message = "さがしています。";
       }
     }
-    var messageAria = '';
+    let messageAria = '';
     if (this.ariaTime && new Date() - this.ariaTime < 5000) {
     } else {
       this.ariaTime = new Date();
@@ -218,10 +269,17 @@ export default class Results extends React.Component {
             <span role="log" aria-live="polite" aria-atomic="true">{messageAria}</span>
             {message}
             {(() => {
-              if (notfound && this.props.externalLinks.length > 0) {
+              if (this.props.filterMessage) return this.props.filterMessage
+            })()}
+            {(() => {
+              if (notfound && this.props.customNotFoundView) {
+                return (
+                  <this.props.customNotFoundView externalLinks={this.props.externalLinks} query={this.props.query}/>
+                )
+              } else if (notfound && this.props.externalLinks.length > 0) {
                 return (
                   <div className="notFound">
-                    {this.props.externalLinks.map((f)=> {
+                    {this.props.externalLinks.map((f) => {
                       return (<div><a href={f.url(this.props.query)} target="_blank">{f.description}</a></div>);
                     })}
                   </div>
@@ -229,21 +287,21 @@ export default class Results extends React.Component {
               }
             })()}
           </div>
-          <div className={'results ' + (_books.length == 0 || isEmptyQuery(this.props.query) ? 'empty' : '')}
+          <div className={'results ' + (_books.length === 0 || isEmptyQuery(this.props.query) ? 'empty' : '')}
                aria-busy={this.state.result && this.state.result.running}
                aria-rowcount={_books.length}
                aria-readonly="true"
                role="grid">
             <div className="row header" role="row">
-              {headers.map((header)=> {
+              {headers.map((header) => {
                 let label = '';
                 let cls = '';
                 if (this.state.sort_column === header.id) {
                   cls = this.state.sort_class.join(' ');
                   if (this.state.sort_order) {
-                    label = (this.state.sort_order == 'ascend') ? '昇順に並び替えました' : '降順に並び替えました';
-                    if (this.state.sort_column == 'pubdate') {
-                      label = (this.state.sort_order == 'ascend') ? '古い順に並び替えました' : '新しい順に並び替えました';
+                    label = (this.state.sort_order === 'ascend') ? '昇順に並び替えました' : '降順に並び替えました';
+                    if (this.state.sort_column === 'pubdate') {
+                      label = (this.state.sort_order === 'ascend') ? '古い順に並び替えました' : '新しい順に並び替えました';
                     }
                   }
                 }
@@ -262,13 +320,13 @@ export default class Results extends React.Component {
                 )
               })}
             </div>
-            {_books.slice(this.state.page * this.props.rows, this.state.page * this.props.rows + this.props.rows).map((book, idx)=> {
+            {_books.slice(this.state.page * this.props.rows, this.state.page * this.props.rows + this.props.rows).map((book, idx) => {
               return (
                 <Book key={book.id}
                       book={book}
-                      uuid={this.state.result.uuid}
+                      uuid={this.state.result ? this.state.result.uuid : ''}
                       index={idx + this.state.page * this.props.rows + 1}
-                      opened={this.state.selected_id == book.id}
+                      opened={this.state.selected_id === book.id}
                       libraries={this.props.libraries}
                       region={this.props.region}
                       name_to_id={this.props.name_to_id}
@@ -309,16 +367,17 @@ export default class Results extends React.Component {
           if (this.props.hideSide === false) {
             return (
               <div
-                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length == 0)) ? 'empty' : 'show')}>
-                <div className="block" style={{display:isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
-                  <p id="regionslabel" className="filter">地域で絞り込み</p>
+                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0)) ? 'empty' : 'show')}>
+                <div className="block" style={{display: isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
+                  <p id="regionslabel"
+                     className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
                   <div className="items" role="radiogroup" aria-labelledby="regionslabel">
-                    {this.props.filters.map((f)=> {
+                    {this.props.filters.map((f) => {
                       return (
                         <button
                           role="radio"
-                          aria-checked={(this.props.filter == f.id || (!this.props.filter && f.id == 0))}
-                          className={(this.props.filter == f.id || (!this.props.filter && f.id == 0)) ? 'active' : ''}
+                          aria-checked={(this.props.filter === f.id || (!this.props.filter && f.id === 0))}
+                          className={(this.props.filter === f.id || (!this.props.filter && f.id === 0)) ? 'active' : '' }
                           onClick={this.props.changeFilter.bind(this)}
                           data-id={f.id}
                           key={f.id}>{f.name}</button>
@@ -329,10 +388,10 @@ export default class Results extends React.Component {
                 {(() => {
                   if (this.props.externalLinks.length > 0) {
                     return (
-                      <div className="block" style={{display:isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
+                      <div className="block" style={{display: isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
                         <p>外部サイト</p>
                         <div className="items" role="radiogroup">
-                          {this.props.externalLinks.map((f, idx)=> {
+                          {this.props.externalLinks.map((f, idx) => {
                             return (
                               <a href={f.url(this.props.query)}
                                  key={'ext_' + idx}

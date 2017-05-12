@@ -211,3 +211,6 @@ rules:
   prefer-spread: 0
   prefer-template: 0
   require-yield: 0
+
+  flowtype/define-flow-type: 1
+  flowtype/use-flow-type: 1
