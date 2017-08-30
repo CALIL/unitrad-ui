@@ -67,7 +67,7 @@ export function filterRemains(remains: Array<string>, includes: Array<number>, n
  * @param data
  * @param name_to_id
  */
-export function unresolvedHoldings(data: UnitradResult, name_to_id: {[string]:Array<number>}): Array<number> {
+export function unresolvedHoldings(data: UnitradResult, name_to_id: { [string]: Array<number> }): Array<number> {
   let unresolved = [];
   let remains = data.remains.concat(data.errors);
   remains.forEach((name) => {
@@ -89,7 +89,7 @@ export function unresolvedHoldings(data: UnitradResult, name_to_id: {[string]:Ar
  * @returns {number} 所蔵館数
  */
 export function countHoldings(holdings: Array<number>, includes: Array<number>): number {
-  if (includes.length === 0)  return holdings.length;
+  if (includes.length === 0) return holdings.length;
   let count = 0;
   includes.forEach((id) => {
     if (holdings.indexOf(id) !== -1) count++;
@@ -172,15 +172,21 @@ function publisherSorter(a: UnitradBook, b: UnitradBook): number {
  * @returns {Number}
  */
 function isbnSorter(a: UnitradBook, b: UnitradBook): number {
-  let _x = _stringSorter(a._isbn, b._isbn);
+  let _x;
+  if (a._isbn.length > 3 && b._isbn.length > 3) {
+    _x = _stringSorter(a._isbn.slice(3), b._isbn.slice(3));
+    if (_x === 0) _x = _stringSorter(a.isbn, b.isbn);
+    return _x;
+  }
+  _x = _stringSorter(a._isbn, b._isbn);
   if (_x === 0) _x = _stringSorter(a.isbn, b.isbn);
   return _x;
 }
 
 function pubdateSorter(a: UnitradBook, b: UnitradBook): number {
   if (a._pubdate === 0 && b._pubdate === 0) return 0;
-  if (a._pubdate === 0) return 1;
-  if (b._pubdate === 0) return -1;
+  if (a._pubdate === 0) return -1;
+  if (b._pubdate === 0) return 1;
   if (a._pubdate > b._pubdate) return 1;
   if (a._pubdate < b._pubdate) return -1;
   return titleSorter(a, b);
@@ -195,10 +201,10 @@ function pubdateSorter(a: UnitradBook, b: UnitradBook): number {
 export function normalizeIsbn(isbn: string): string {
   if (!isbn) return '';
   let _tmp = isbn.replace(/[-]+/g, '');
-  if (_tmp.length === 10 || _tmp.length === 13) {
-    return _tmp;
+  if (_tmp.length <= 10) {
+    return "\u2002\u2002\u2002" + _tmp;
   }
-  return '';
+  return _tmp;
 }
 
 
@@ -271,8 +277,30 @@ export function applySort(books: Array<UnitradBook>, column: string, reverse: bo
       _books.sort(pubdateSorter);
       break;
     case 'holdings':
-      _books.map(book => book._holdings = holdingsFromBook(book, includes));
-      _books.sort((a, b) => a._holdings - b._holdings);
+      _books.map(book => {
+        book._holdings = holdingsFromBook(book, includes);
+        if (book._holdings === 1) {
+          let vid = 0;
+          let _holdings = book.holdings.concat();
+          if (book.estimated_holdings) _holdings = [...new Set(_holdings.concat(book.estimated_holdings))];
+          if (includes.length === 0) {
+            vid = _holdings[0];
+          } else {
+            includes.forEach((id) => {
+              if (_holdings.indexOf(id) !== -1) vid = id;
+            });
+          }
+          book._holding_key = vid;
+        }
+      });
+      _books.sort((a, b) => {
+        let x = a._holdings - b._holdings;
+        if (x === 0 && a._holdings === 1) {
+          return b._holding_key - a._holding_key;
+        } else {
+          return x;
+        }
+      });
       break;
   }
   if (reverse) _books.reverse();

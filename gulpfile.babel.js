@@ -67,7 +67,6 @@ gulp.task('build:js', () => {
     gutil.log('[Use ConfigDir\'s app.js]');
   } catch (e) {
   }
-  let saveLicense = (node, comment) => /Modules in this bundle/mi.test(comment.value);
   let page = JSON.parse(fs.readFileSync(configDir + 'pageconfig.json'));
   let confjs = 'window.options = ' + JSON.stringify(page.unitrad_options, null, 2) + ';';
   return browserify(
@@ -88,19 +87,19 @@ gulp.task('build:js', () => {
     ]
   })
     .plugin(licensify)
+    .plugin('bundle-collapser/plugin')
     .bundle()
     .pipe(source('app.js'))
     .pipe(header(confjs))
     .pipe(buffer())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.init({loadMaps: true}) : gutil.noop())
-    .pipe(process.env.NODE_ENV === 'production' ? uglify({preserveComments: saveLicense}) : gutil.noop())
+    .pipe(process.env.NODE_ENV === 'production' ? uglify({output: {comments: /Modules in this bundle/mi}}) : gutil.noop())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.write('./map') : gutil.noop())
     .pipe(gulp.dest(destDir));
-
 });
 
 
-gulp.task('build:html', ['copy:assets'], () => {
+gulp.task('build:html', ['copy:assets:local', 'copy:assets:global'], () => {
   /* HTMLをビルドする */
   let page = JSON.parse(fs.readFileSync(configDir + 'pageconfig.json'));
   let values = {
@@ -115,10 +114,13 @@ gulp.task('build:html', ['copy:assets'], () => {
     .pipe(gulp.dest(destDir))
 });
 
+gulp.task('copy:assets:local', () => {
+  return gulp.src([configDir + 'assets/*'], {base: configDir}).pipe(gulp.dest(destDir))
+});
 
-gulp.task('copy:assets', () => {
-  /* 素材ファイルをコピーする */
-  return gulp.src(['src/assets/*', configDir + 'assets/*'], {base: 'src'}).pipe(gulp.dest(destDir))
+
+gulp.task('copy:assets:global', () => {
+  return gulp.src(['src/assets/*'], {base: 'src'}).pipe(gulp.dest(destDir))
 });
 
 

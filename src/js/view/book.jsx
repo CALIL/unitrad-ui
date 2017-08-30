@@ -9,9 +9,10 @@
 
  */
 
-import React from 'react';
+import * as React from 'react';
 import {api} from '../api.js'
 import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort.js'
+import type {UnitradBook, UnitradResult} from '../declare.js';
 
 type State = {
   uuid: ?string,
@@ -31,24 +32,18 @@ type Props = {
   onClose: Function,
   name_to_id: { [string]: Array<number> },
   libraries: { [number]: string },
-  holdingOrder: Array<number>,
-  customHoldingView: React.Element<any>,
+  holdingOrder: ?Array<number>,
+  customHoldingView: ?Function,
   holdingLinkReplacer: ?Function
 }
 
-export default class Book extends React.Component {
-  props: Props;
-  state: State;
+export default class Book extends React.Component<Props, State> {
   api: api;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      uuid: null,
-      book_deep: null,
-      unresolvedHoldings: []
-    }
-  }
+  state = {
+    uuid: null,
+    book_deep: null,
+    unresolvedHoldings: []
+  };
 
   doDeepSearch() {
     if (this.props.opened && !this.api) {
@@ -69,7 +64,7 @@ export default class Book extends React.Component {
     });
   }
 
-  onKeyUp(e: SyntheticEvent) {
+  onKeyUp(e: SyntheticEvent<HTMLElement>) {
     e = e || window.event;
     if (e.keyCode === 13) {
       e.stopPropagation();
@@ -103,11 +98,11 @@ export default class Book extends React.Component {
            data-id={this.props.book.id}
            aria-label={
              (this.props.book.title + "。" +
-             ((this.props.book.volume) ? this.props.book.volume + "。" : "") +
-             ((this.props.book.author) ? "著者。" + this.props.book.author + "。" : "") +
-             ((this.props.book.publisher) ? "出版者。" + this.props.book.publisher + "。" : "") +
-             ((this.props.book.pubdate) ? "出版年。" + this.props.book.pubdate + "。" : "") +
-             ((this.props.book.isbn === '') ? '' : 'ISBNあり。'))}
+               ((this.props.book.volume) ? this.props.book.volume + "。" : "") +
+               ((this.props.book.author) ? "著者。" + this.props.book.author + "。" : "") +
+               ((this.props.book.publisher) ? "出版者。" + this.props.book.publisher + "。" : "") +
+               ((this.props.book.pubdate) ? "出版年。" + this.props.book.pubdate + "。" : "") +
+               ((this.props.book.isbn === '' || this.props.book.isbn === null) ? '' : 'ISBNあり。'))}
            onKeyUp={!this.props.opened ? this.onKeyUp.bind(this) : null}
            onClick={!this.props.opened ? this.props.onSelect.bind(this) : null}>
         <div className="title" role="gridcell">
@@ -117,18 +112,65 @@ export default class Book extends React.Component {
         <div className="author" role="gridcell">{this.props.book.author}</div>
         <div className="publisher" role="gridcell">{this.props.book.publisher}</div>
         <div className="pubdate" role="gridcell">{this.props.book.pubdate}</div>
-        <div className="isbn" role="gridcell">{this.props.book.isbn}</div>
+        <div className={'isbn' + (this.props.book.isbn !== '' && this.props.book.isbn !== null ? ' exist' : '')}
+             role="gridcell">
+          {(() => {
+            if (this.props.isbnAdvanced && this.props.book._isbn.length >= 10 && (this.props.book._isbn.slice(0, 3) === '978' || this.props.book._isbn.slice(0, 3) === "\u2002\u2002\u2002")) {
+              let block1 = this.props.book._isbn.slice(0, 3);
+              let block2 = this.props.book._isbn.slice(3, 4);
+              let block3 = this.props.book._isbn.slice(5);
+              return (
+                <span>
+                  <span style={{
+                    color: '#aaa',
+                    paddingRight: '4px',
+                    fontFamily: "Consolas, 'Courier New', Courier, Monaco, monospace"
+                  }}>{block1}</span>
+                  <span style={{
+                    textDecoration: 'underline',
+                    fontSize: '130%',
+                    paddingRight: '2px',
+                    fontWeight: block2 !== '4' ? 'bold' : 'normal',
+                    fontFamily: "Consolas, 'Courier New', Courier, Monaco, monospace"
+                  }}>{block2}</span>
+                  <span style={{
+                    fontSize: '120%',
+                    letterSpacing: '1px',
+                    fontFamily: "Consolas, 'Courier New', Courier, Monaco, monospace"
+                  }}>{block3}</span>
+                </span>
+              )
+            } else {
+              return this.props.book.isbn
+            }
+          })()}
+        </div>
         <div className="holdings" role="gridcell">
-          { (() => {
+          {(() => {
             if (this.props.opened) {
               return (<button role="button" aria-label="閉じる" tabIndex="0" className="close"
                               onClick={this.props.onClose.bind(this)}>&times;</button>)
             } else {
-              return (<div className={'count ' + ((hcount === 0) ? 'empty' : '')}>{hcount}</div>)
+              if (hcount === 1) {
+                let vid;
+                if (this.props.includes.length === 0) {
+                  vid = virtual_holdings[0];
+                } else {
+                  this.props.includes.forEach((id) => {
+                    if (virtual_holdings.indexOf(id) !== -1) vid = id;
+                  });
+                }
+                if (vid) {
+                  return (<div className={'count labeled libid-' + vid}
+                               data-label={vid in this.props.libraries ? this.props.libraries[vid] : vid}>{hcount}</div>)
+                }
+              } else {
+                return (<div className={'count ' + ((hcount === 0) ? 'empty' : '')}>{hcount}</div>)
+              }
             }
-          })() }
+          })()}
         </div>
-        { (() => {
+        {(() => {
           if (this.props.opened) {
             if (this.props.book.isbn !== '' && this.props.book.isbn !== '？' && !this.api) {
               // ISBNがある場合はAPIを呼び出す
@@ -137,9 +179,9 @@ export default class Book extends React.Component {
 
             if (this.props.holdingOrder) {
               virtual_holdings.sort((a, b) => {
-                let _a = this.props.holdingOrder.indexOf(a);
+                let _a = this.props.holdingOrder ? this.props.holdingOrder.indexOf(a) : -1;
                 if (_a === -1) _a = a;
-                let _b = this.props.holdingOrder.indexOf(b);
+                let _b = this.props.holdingOrder ? this.props.holdingOrder.indexOf(b) : -1;
                 if (_b === -1) _b = b;
                 if (_a < _b) return -1;
                 if (_a > _b) return 1;
@@ -152,7 +194,7 @@ export default class Book extends React.Component {
                 <div className="count">
                   {hcount}館所蔵
                 </div>
-                { (() => {
+                {(() => {
                   if (this.props.customDetailView) {
                     let ref;
                     if (this.props.book.isbn === '' || this.props.book.isbn === null) {
@@ -170,7 +212,7 @@ export default class Book extends React.Component {
                     return (
                       <this.props.customDetailView url={ref} book={this.props.book} holdings={virtual_holdings}/>);
                   }
-                })() }
+                })()}
                 <div className="links">
                   {virtual_holdings.map((holding) => {
                     if (this.props.includes.length === 0 || this.props.includes.indexOf(holding) !== -1) {
@@ -191,14 +233,13 @@ export default class Book extends React.Component {
                           return
                         }
                       }
-
                       return (
                         <this.props.customHoldingView url={url}
-                                 key={holding}
-                                 uuid={uuid}
-                                 libid={holding}
-                                 bid={this.props.book.id}
-                                 label={holding in this.props.libraries ? this.props.libraries[holding] : holding}/>
+                                                      key={holding}
+                                                      uuid={uuid}
+                                                      libid={holding}
+                                                      bid={this.props.book.id}
+                                                      label={holding in this.props.libraries ? this.props.libraries[holding] : holding}/>
                       );
                     }
                   })}
@@ -206,7 +247,7 @@ export default class Book extends React.Component {
               </div>
             );
           }
-        })() }
+        })()}
       </div>
     );
   }

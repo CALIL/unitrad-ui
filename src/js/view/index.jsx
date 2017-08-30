@@ -9,12 +9,13 @@
 
  */
 
-import React from 'react';
+import * as React from 'react';
 import {findDOMNode} from 'react-dom';
 import Results from './result.jsx'
 import {DefaultHoldingView} from './holding.jsx'
 import {normalizeQuery, isEmptyQuery, fetchMapping} from '../api.js'
 import {getParamsFromURL, buildQueryString, getHash} from '../history.js'
+import type {UIFilter, UnitradQuery} from "../declare.js";
 
 /**
  * フィルタのリストから指定したIDの配列を取得する
@@ -56,7 +57,7 @@ type Props = {
   region: string,  //検索対象地域
   secondaryRegions?: Array<string>,  // セカンダリの検索対象地域
   mode: 'simple' | 'advanced',  //起動時の検索モード（シンプル・詳細） oneOf(['simple', 'advanced'])
-  excludes?: Array<number>, // 非表示にする図書館IDのリスト
+  excludes: Array<number>, // 非表示にする図書館IDのリスト
   lazyHidden?: Array<string>, // 遅い検索対象を隠す(システム名を指定)
   rows: number, // 検索結果の行数
   holdingLinkReplacer?: Function, // 所蔵リンクの置換関数
@@ -68,14 +69,14 @@ type Props = {
   customDetailView?: Function, // カスタム資料コンポーネント
   onSearch?: Function, // 検索イベント
   customNotFoundView?: Function, // 見つからないときの表示
-  externalLinks?: Array<UIExternal>, // 外部サービスへの連携リンク
+  externalLinks: Array<UIExternal>, // 外部サービスへの連携リンク
   welcomeMessage: ?string,
   welcomeTitle: ?string,
   welcomeLinks: Array<UILink>,
   onSearch: null | (query: UnitradQuery) => void
 }
 
-export default class Index extends React.Component {
+export default class Index extends React.Component<Props, State> {
   static defaultProps = {
     onSearch: null,
     mode: 'simple',
@@ -101,9 +102,7 @@ export default class Index extends React.Component {
   };
 
   requestUpdateURL: null | 'search' | 'filter';
-  state: State;
   resizeTimer: ?number;
-  props: Props;
 
   constructor(props: Props) {
     super(props);
@@ -136,7 +135,7 @@ export default class Index extends React.Component {
     }
     window.addEventListener("scroll", this.onScroll.bind(this));
     window.addEventListener("resize", this.onScroll.bind(this));
-    if (!this.state.libraries) {
+    if (!this.state.libraries || Object.keys(this.state.libraries).length === 0) {
       fetchMapping(this.props.region, (res) => {
         this.setState({
           libraries: res.libraries,
@@ -151,7 +150,7 @@ export default class Index extends React.Component {
     window.removeEventListener("resize", this.onScroll);
   }
 
-  onScroll(e: ?SyntheticEvent) {
+  onScroll(e: ?SyntheticEvent<HTMLElement>) {
     if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.resizeTimer = setTimeout(() => {
       let element = findDOMNode(this.refs.box);
@@ -163,7 +162,7 @@ export default class Index extends React.Component {
     }, 100)
   }
 
-  onPopState(e: SyntheticEvent) {
+  onPopState(e: SyntheticEvent<HTMLElement>) {
     let params = getParamsFromURL();
     let filterItem = getFilter(this.props.filters, params.filter);
     this.setState({
@@ -177,7 +176,7 @@ export default class Index extends React.Component {
     this.refs.results.setState({selected_id: getHash(), page: 0, sort_key: null, sort_order: ''});
   }
 
-  doSearch(e: SyntheticEvent) {
+  doSearch(e: SyntheticEvent<HTMLElement>) {
     e.preventDefault();
     this.requestUpdateURL = 'search';
     let query: UnitradQuery;
@@ -194,7 +193,7 @@ export default class Index extends React.Component {
         isbn: this.state.query.isbn ? this.state.query.isbn : ''
       };
     }
-    this.refs.results.setState({selected_id: null, page: 0, sort_key: null, sort_order: ''});
+    this.refs.results.setState({selected_id: null, page: 0, sort_column: null, sort_order: ''});
     this.setState({established_query: normalizeQuery(query), display_customs: false});
     let onSearch = this.props.onSearch || null;
     if (onSearch) {
@@ -213,12 +212,12 @@ export default class Index extends React.Component {
     return this.props.mode;
   }
 
-  switchAdvanced(e: SyntheticEvent) {
+  switchAdvanced(e: SyntheticEvent<HTMLElement>) {
     e.preventDefault();
     this.setState({mode: 'advanced', display_customs: false, established_query: normalizeQuery({})});
   }
 
-  switchSimple(e: SyntheticEvent) {
+  switchSimple(e: SyntheticEvent<HTMLElement>) {
     e.preventDefault();
     this.setState({
       mode: 'simple',
@@ -227,12 +226,12 @@ export default class Index extends React.Component {
     });
   }
 
-  updateHandler(e: SyntheticInputEvent) {
+  updateHandler(e: SyntheticInputEvent<HTMLInputElement>) {
     this.state.query[e.target.id] = e.target.value;
     this.setState({});
   }
 
-  changeFilter(e: SyntheticInputEvent) {
+  changeFilter(e: SyntheticInputEvent<HTMLInputElement>) {
     this.requestUpdateURL = 'filter';
     let filterItem = getFilter(this.props.filters, e.target.attributes.getNamedItem('data-id').value);
     let newState: {
@@ -254,7 +253,7 @@ export default class Index extends React.Component {
     this.refs.results.setState({page: 0});
   }
 
-  changeCustom(e: SyntheticInputEvent) {
+  changeCustom(e: SyntheticInputEvent<HTMLInputElement>) {
     let i = parseInt(e.target.attributes.getNamedItem('data-id').value);
     let x = this.state.includes.indexOf(i);
     if (x === -1) {

@@ -9,7 +9,7 @@
 
  */
 
-import React from 'react';
+import * as React from 'react';
 import ReactPaginate from 'react-paginate';
 import {
   api,
@@ -19,6 +19,7 @@ import {
 } from '../api.js'
 import {processExcludes, applyIncludes, applySort, filterRemains} from '../sort.js'
 import Book from './book.jsx';
+import type {UIFilter, UnitradQuery, UnitradResult} from "../declare.js";
 
 
 type State = {
@@ -40,20 +41,23 @@ type Props = {
   includes: Array<number>,
   name_to_id: { [string]: Array<number> },
   libraries: { [number]: string },
-  lazyHidden: Array<string>,
+  lazyHidden: ?Array<string>,
   externalLinks: Array<UIExternal>,
   holdingLinkReplacer: ?Function,
-  holdingOrder: Array<number>,
+  holdingOrder: ?Array<number>,
   rows: number,
-  customHoldingView: Function,
-  customDetailView: Function,
-  changeFilter: Function
+  customHoldingView: ?Function,
+  customDetailView: ?Function,
+  customNotFoundView: ?Function,
+  changeFilter: Function,
+  hideSide: boolean,
+  showLogo: boolean,
+  filterMessage: ?string,
+  filterTitle: ?string
 };
 
 
-export default class Results extends React.Component {
-  props: Props;
-  state: State;
+export default class Results extends React.Component<Props, State> {
   _query: UnitradQuery;
   api: api;
   started: number;
@@ -105,7 +109,7 @@ export default class Results extends React.Component {
     if (this.api) this.api.kill();
   }
 
-  onSelectBook(e: SyntheticInputEvent) {
+  onSelectBook(e: SyntheticInputEvent<HTMLInputElement>) {
     if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
     let current: ?Element = e.target;
     while (current && current.parentNode) {
@@ -143,7 +147,7 @@ export default class Results extends React.Component {
     this.setState({page: data.selected, selected_id: null});
   }
 
-  onSort(e: SyntheticInputEvent) {
+  onSort(e: SyntheticInputEvent<HTMLInputElement>) {
     this.removeHash();
     let target: null | Element & HTMLElement = e.target;
     while (target && !target.className.match('sort')) {
@@ -176,7 +180,7 @@ export default class Results extends React.Component {
     this.setState({page: 0, sort_column: column, sort_order: nextOrder, sort_class: names});
   }
 
-  onSortKeyUp(e: SyntheticInputEvent) {
+  onSortKeyUp(e: SyntheticInputEvent<HTMLInputElement>) {
     e = e || window.event;
     if (e.keyCode === 13) {
       e.stopPropagation();
@@ -190,7 +194,7 @@ export default class Results extends React.Component {
 
   render() {
     let _books = [];
-    let message: string;
+    let message: string = '';
     let notfound = false;
     if (this.state.result && this.state.result.books) {
       _books = applyIncludes(this.state.result.books, this.props.includes);
@@ -231,7 +235,7 @@ export default class Results extends React.Component {
           }
           let _errors = this.filterRemains(this.state.result.errors);
           if (_errors.length > 0) {
-            message = _errors.join(',') + "は検索できませんでした。";
+            message += _errors.join(',') + "は検索できませんでした。";
           }
           this.ariaTime = null;
         }
@@ -261,9 +265,10 @@ export default class Results extends React.Component {
       {label: '所蔵館', id: 'holdings'}
     ];
 
+
     return (
       <div
-        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '')}>
+        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '')}>
         <div className="emresults">
           <div className={'message ' + (isEmptyQuery(this.props.query) ? 'empty' : '')}>
             <span role="log" aria-live="polite" aria-atomic="true">{messageAria}</span>
@@ -336,6 +341,7 @@ export default class Results extends React.Component {
                       holdingOrder={this.props.holdingOrder}
                       customHoldingView={this.props.customHoldingView}
                       customDetailView={this.props.customDetailView}
+                      isbnAdvanced={this.state.sort_column === 'isbn' && this.state.sort_order !== ''}
                       onClose={this.onClose.bind(this)}
                       onSelect={this.onSelectBook.bind(this)}
                 />
@@ -377,7 +383,7 @@ export default class Results extends React.Component {
                         <button
                           role="radio"
                           aria-checked={(this.props.filter === f.id || (!this.props.filter && f.id === 0))}
-                          className={(this.props.filter === f.id || (!this.props.filter && f.id === 0)) ? 'active' : '' }
+                          className={(this.props.filter === f.id || (!this.props.filter && f.id === 0)) ? 'active' : ''}
                           onClick={this.props.changeFilter.bind(this)}
                           data-id={f.id}
                           key={f.id}>{f.name}</button>

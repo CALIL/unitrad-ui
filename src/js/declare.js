@@ -61,6 +61,7 @@ declare type UnitradBook = {
   id: string,
   holdings: Array<number>,
   _holdings: number,
+  _holding_key: number,
   estimated_holdings: Array<number>,
 };
 
