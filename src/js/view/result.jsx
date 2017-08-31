@@ -265,7 +265,6 @@ export default class Results extends React.Component<Props, State> {
       {label: '所蔵館', id: 'holdings'}
     ];
 
-
     return (
       <div
         className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '')}>

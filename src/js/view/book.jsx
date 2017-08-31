@@ -118,7 +118,7 @@ export default class Book extends React.Component<Props, State> {
             if (this.props.isbnAdvanced && this.props.book._isbn.length >= 10 && (this.props.book._isbn.slice(0, 3) === '978' || this.props.book._isbn.slice(0, 3) === "\u2002\u2002\u2002")) {
               let block1 = this.props.book._isbn.slice(0, 3);
               let block2 = this.props.book._isbn.slice(3, 4);
-              let block3 = this.props.book._isbn.slice(5);
+              let block3 = this.props.book._isbn.slice(4);
               return (
                 <span>
                   <span style={{
