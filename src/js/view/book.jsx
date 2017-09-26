@@ -12,7 +12,6 @@
 import * as React from 'react';
 import {api} from '../api.js'
 import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort.js'
-import type {UnitradBook, UnitradResult} from '../declare.js';
 
 type State = {
   uuid: ?string,
@@ -38,6 +37,7 @@ type Props = {
 }
 
 export default class Book extends React.Component<Props, State> {
+  static defaultProps: Props;
   api: api;
   state = {
     uuid: null,
@@ -64,7 +64,7 @@ export default class Book extends React.Component<Props, State> {
     });
   }
 
-  onKeyUp(e: SyntheticEvent<HTMLElement>) {
+  onKeyUp(e: SyntheticEvent<>) {
     e = e || window.event;
     if (e.keyCode === 13) {
       e.stopPropagation();

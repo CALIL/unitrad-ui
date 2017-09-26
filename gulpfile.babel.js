@@ -18,6 +18,7 @@ import ejs from "ejs";
 import header from "gulp-header";
 import licensify from "licensify";
 import cssnano from "cssnano";
+import replace from "gulp-replace";
 
 /* コマンドラインのオプションを解釈する */
 let args = parseArgs(process.argv.slice(2));
@@ -95,6 +96,9 @@ gulp.task('build:js', () => {
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.init({loadMaps: true}) : gutil.noop())
     .pipe(process.env.NODE_ENV === 'production' ? uglify({output: {comments: /Modules in this bundle/mi}}) : gutil.noop())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.write('./map') : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length>0) ? replace(page.replace_js[0].match, page.replace_js[0].replacement) : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length>1) ? replace(page.replace_js[1].match, page.replace_js[1].replacement) : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length>2) ? replace(page.replace_js[2].match, page.replace_js[2].replacement) : gutil.noop())
     .pipe(gulp.dest(destDir));
 });
 

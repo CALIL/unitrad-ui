@@ -19,7 +19,6 @@ import {
 } from '../api.js'
 import {processExcludes, applyIncludes, applySort, filterRemains} from '../sort.js'
 import Book from './book.jsx';
-import type {UIFilter, UnitradQuery, UnitradResult} from "../declare.js";
 
 
 type State = {
@@ -58,6 +57,7 @@ type Props = {
 
 
 export default class Results extends React.Component<Props, State> {
+  static defaultProps: Props;
   _query: UnitradQuery;
   api: api;
   started: number;
@@ -109,7 +109,7 @@ export default class Results extends React.Component<Props, State> {
     if (this.api) this.api.kill();
   }
 
-  onSelectBook(e: SyntheticInputEvent<HTMLInputElement>) {
+  onSelectBook(e: SyntheticInputEvent<>) {
     if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
     let current: ?Element = e.target;
     while (current && current.parentNode) {
@@ -147,7 +147,7 @@ export default class Results extends React.Component<Props, State> {
     this.setState({page: data.selected, selected_id: null});
   }
 
-  onSort(e: SyntheticInputEvent<HTMLInputElement>) {
+  onSort(e: SyntheticInputEvent<>) {
     this.removeHash();
     let target: null | Element & HTMLElement = e.target;
     while (target && !target.className.match('sort')) {
@@ -180,7 +180,7 @@ export default class Results extends React.Component<Props, State> {
     this.setState({page: 0, sort_column: column, sort_order: nextOrder, sort_class: names});
   }
 
-  onSortKeyUp(e: SyntheticInputEvent<HTMLInputElement>) {
+  onSortKeyUp(e: SyntheticInputEvent<>) {
     e = e || window.event;
     if (e.keyCode === 13) {
       e.stopPropagation();

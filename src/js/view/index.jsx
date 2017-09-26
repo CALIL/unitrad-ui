@@ -15,7 +15,6 @@ import Results from './result.jsx'
 import {DefaultHoldingView} from './holding.jsx'
 import {normalizeQuery, isEmptyQuery, fetchMapping} from '../api.js'
 import {getParamsFromURL, buildQueryString, getHash} from '../history.js'
-import type {UIFilter, UnitradQuery} from "../declare.js";
 
 /**
  * フィルタのリストから指定したIDの配列を取得する
@@ -150,7 +149,7 @@ export default class Index extends React.Component<Props, State> {
     window.removeEventListener("resize", this.onScroll);
   }
 
-  onScroll(e: ?SyntheticEvent<HTMLElement>) {
+  onScroll(e: ?SyntheticEvent<>) {
     if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.resizeTimer = setTimeout(() => {
       let element = findDOMNode(this.refs.box);
@@ -162,7 +161,7 @@ export default class Index extends React.Component<Props, State> {
     }, 100)
   }
 
-  onPopState(e: SyntheticEvent<HTMLElement>) {
+  onPopState(e: SyntheticEvent<>) {
     let params = getParamsFromURL();
     let filterItem = getFilter(this.props.filters, params.filter);
     this.setState({
@@ -176,7 +175,7 @@ export default class Index extends React.Component<Props, State> {
     this.refs.results.setState({selected_id: getHash(), page: 0, sort_key: null, sort_order: ''});
   }
 
-  doSearch(e: SyntheticEvent<HTMLElement>) {
+  doSearch(e: SyntheticEvent<>) {
     e.preventDefault();
     this.requestUpdateURL = 'search';
     let query: UnitradQuery;
@@ -212,12 +211,12 @@ export default class Index extends React.Component<Props, State> {
     return this.props.mode;
   }
 
-  switchAdvanced(e: SyntheticEvent<HTMLElement>) {
+  switchAdvanced(e: SyntheticEvent<>) {
     e.preventDefault();
     this.setState({mode: 'advanced', display_customs: false, established_query: normalizeQuery({})});
   }
 
-  switchSimple(e: SyntheticEvent<HTMLElement>) {
+  switchSimple(e: SyntheticEvent<>) {
     e.preventDefault();
     this.setState({
       mode: 'simple',
@@ -226,12 +225,12 @@ export default class Index extends React.Component<Props, State> {
     });
   }
 
-  updateHandler(e: SyntheticInputEvent<HTMLInputElement>) {
+  updateHandler(e: SyntheticInputEvent<>) {
     this.state.query[e.target.id] = e.target.value;
     this.setState({});
   }
 
-  changeFilter(e: SyntheticInputEvent<HTMLInputElement>) {
+  changeFilter(e: SyntheticInputEvent<>) {
     this.requestUpdateURL = 'filter';
     let filterItem = getFilter(this.props.filters, e.target.attributes.getNamedItem('data-id').value);
     let newState: {
@@ -253,7 +252,7 @@ export default class Index extends React.Component<Props, State> {
     this.refs.results.setState({page: 0});
   }
 
-  changeCustom(e: SyntheticInputEvent<HTMLInputElement>) {
+  changeCustom(e: SyntheticInputEvent<>) {
     let i = parseInt(e.target.attributes.getNamedItem('data-id').value);
     let x = this.state.includes.indexOf(i);
     if (x === -1) {
