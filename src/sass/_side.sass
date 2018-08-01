@@ -2,7 +2,7 @@
 
 /* サイドバー
 .emside
-    padding-top: 3rem
+    padding-top: rem(3)
     transition: opacity 0.7s
     transition-delay: 0.7s
     visibility: visible
@@ -10,7 +10,7 @@
         margin-top: 15px
         border-top: solid 1px #cbcbcb
         .poweredby
-            margin-top: 1.3rem
+            margin-top: rem(1.3)
             margin-left: 5px
     &.empty
         opacity: 0
@@ -18,17 +18,17 @@
         visibility: hidden
         transition: opacity 0.7s, visibility 0s
     > .block
-        margin-bottom: 0.7rem
-        font-size: 1.4rem
+        margin-bottom: rem(0.7)
+        font-size: rem(1.4)
         &:last-child
             border-bottom: solid 1px #cbcbcb
         > p
-            font-size: 1.6rem
-            padding-bottom: 0.7rem
-            padding-top: 1rem
+            font-size: rem(1.6)
+            padding-bottom: rem(0.7)
+            padding-top: rem(1)
             vertical-align: middle
             margin-top: 0
-            margin-bottom: 1rem
+            margin-bottom: rem(1)
             color: #666666
             font-weight: bold
             text-align: left
@@ -44,8 +44,8 @@
                 text-align: left
                 background-color: #fff
                 cursor: pointer
-                font-size: 1.4rem
-                line-height: 3rem
+                font-size: rem(1.4)
+                line-height: rem(3)
                 transition: background-color 0.1s
                 padding: 1px 6px
                 &:hover, &:focus
@@ -56,8 +56,5 @@
                     font-weight: 600
                     color: #666
             a.external
-                // border-top: dashed 1px #cbcbcb
-                // padding-top: 0.7rem
-                // margin-top: 0.7rem
                 &:hover, &:focus
                     background: #eee url('assets/external.png') no-repeat 95% center

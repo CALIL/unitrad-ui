@@ -1,16 +1,26 @@
 @charset "utf-8"
 
+// CSSフレームワークに対応するために演算済みのremを出力する
+@function rem($value)
+    @if $standard-rem == false
+        @return $value * 1rem
+    @else
+        @return ceil($value * 0.625 * 100) / 100 * 1rem
+
 *
     box-sizing: border-box
 
-.clearfix:after
-    content: ""
-    clear: both
-    display: block
-
 html
-    font-size: 62.5%
-    overflow-y: scroll
+    @if $standard-rem == false
+        font-size: 62.5%
+        overflow-y: scroll
+
+body
+    @if $standard-rem == false
+        font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, メイリオ, sans-serif
+        font-size: 1rem
+        margin: 0
+        padding: 0
 
 // 検索ボタンのリセット(iOS用)
 input[type=search]
@@ -18,12 +28,6 @@ input[type=search]
     -webkit-border-radius: 0
     &::-webkit-search-cancel-button, &::-webkit-search-decoration, &::-webkit-search-results-button, &::-webkit-search-results-decoration
         -webkit-appearance: none
-
-body
-    font-family: 'Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', Meiryo, メイリオ, sans-serif
-    font-size: 1rem
-    margin: 0
-    padding: 0
 
 .emcontainer
     max-width: 1600px
@@ -83,9 +87,9 @@ body
     color: $themeColor
     text-decoration: none
     border-radius: 5px
-    font-size: 1.3rem
+    font-size: rem(1.3)
     font-weight: 600
-    line-height: 1.3rem
+    line-height: rem(1.3)
     transition: 0.3s background-color ease
     &:hover
         background-color: $themeColor
