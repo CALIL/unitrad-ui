@@ -3,13 +3,13 @@
 
  Unitrad UI 検索ボックス
 
- Copyright (c) 2017 CALIL Inc.
+ Copyright (c) 2018 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
-import * as React from 'react';
+import React from 'react';
 import {findDOMNode} from 'react-dom';
 import Results from './result.jsx'
 import {DefaultHoldingView} from './holding.jsx'
@@ -30,11 +30,11 @@ function getFilter(filters: Array<UIFilter>, current: ?string): UIFilter {
 }
 
 type State = {
-  libraries: { [number]: string },
-  name_to_id: { [string]: Array<number> },
+  mapping: { [string]: Object }, // リージョンの詳細情報
+  region: string,
+  is_multiple_region: Boolean, // 複数リージョンを検索対象とするか
   query: UnitradQuery,
   established_query: UnitradQuery,
-  display_customs: boolean,
   filterMessage: string,
   includes: Array<number>,
   mode: 'simple' | 'advanced',
@@ -51,13 +51,12 @@ type Props = {
   filters: Array<UIFilter>,
   libraries?: { [number]: string }, //図書館idから図書館名の参照連想配列
   name_to_id?: { [string]: Array<number> },  //図書館名から図書館idの参照連想配列
-  showAreas: boolean,  //詳細検索の地域の表示フラグ
   hideSide: boolean,  //検索結果の地域で絞り込みの非表示フラグ
   region: string,  //検索対象地域
   secondaryRegions?: Array<string>,  // セカンダリの検索対象地域
   mode: 'simple' | 'advanced',  //起動時の検索モード（シンプル・詳細） oneOf(['simple', 'advanced'])
   excludes: Array<number>, // 非表示にする図書館IDのリスト
-  lazyHidden?: Array<string>, // 遅い検索対象を隠す(システム名を指定)
+  lazyHidden?: Array<string>, // 遅い検索対象を隠す(システムIDを指定)
   rows: number, // 検索結果の行数
   holdingLinkReplacer?: Function, // 所蔵リンクの置換関数
   holdingOrder?: Array<number>, // 所蔵リンクの並び順(nullの場合はソートしない)
@@ -72,7 +71,8 @@ type Props = {
   welcomeMessage: ?string,
   welcomeTitle: ?string,
   welcomeLinks: Array<UILink>,
-  onSearch: null | (query: UnitradQuery) => void
+  onSearch: null | (query: UnitradQuery) => void,
+  freewordPlaceholder: ?string  //　フリーワードのプレースホルダー
 }
 
 export default class Index extends React.Component<Props, State> {
@@ -89,7 +89,6 @@ export default class Index extends React.Component<Props, State> {
     showLogo: true,
     linkLogo: true,
     customHoldingView: DefaultHoldingView,
-    showAreas: false,
     hideSide: false,
     filters: [
       {
@@ -107,19 +106,27 @@ export default class Index extends React.Component<Props, State> {
     super(props);
     let params = getParamsFromURL();
     let filterItem = getFilter(props.filters, params.filter);
+    let mapping = {};
+    mapping[this.props.region] = {
+      name_to_id: props.name_to_id ? props.name_to_id : {},
+      libraries: props.libraries ? props.libraries : {}
+    };
     this.requestUpdateURL = null;
     this.state = {
+      region: filterItem.region ? filterItem.region : this.props.region,
       includes: filterItem.includes.concat(),
       filter: filterItem.id,
       filterMessage: filterItem.message ? filterItem.message : '',
       mode: this.judgeMode(normalizeQuery(params)),
       query: normalizeQuery(params),
       established_query: normalizeQuery(params),
-      name_to_id: props.name_to_id ? props.name_to_id : {},
-      libraries: props.libraries ? props.libraries : {},
-      display_customs: false,
-      logoAvailable: true
+      mapping: mapping,
+      logoAvailable: true,
+      is_multiple_region: false
     };
+    for (let f of props.filters) {
+      if (f.region && f.region !== props.region) this.state.is_multiple_region = true;
+    }
     let onSearch = this.props.onSearch || null;
     if (onSearch && !isEmptyQuery(normalizeQuery(params))) {
       onSearch(normalizeQuery(params));
@@ -134,12 +141,10 @@ export default class Index extends React.Component<Props, State> {
     }
     window.addEventListener("scroll", this.onScroll.bind(this));
     window.addEventListener("resize", this.onScroll.bind(this));
-    if (!this.state.libraries || Object.keys(this.state.libraries).length === 0) {
+    if (!(this.props.region in this.state.mapping) || Object.keys(this.state.mapping[this.props.region].libraries).length === 0) {
       fetchMapping(this.props.region, (res) => {
-        this.setState({
-          libraries: res.libraries,
-          name_to_id: res.name_to_id,
-        });
+        this.state.mapping[this.props.region] = res;
+        this.setState({});
       });
     }
   }
@@ -155,7 +160,7 @@ export default class Index extends React.Component<Props, State> {
       let element = findDOMNode(this.refs.box);
       if (element && element instanceof HTMLElement) {
         let rect = element.getBoundingClientRect();
-        let windowHeight: number = ( window.innerHeight || 0);
+        let windowHeight: number = (window.innerHeight || 0);
         this.setState({logoAvailable: windowHeight - 50 > rect.top + rect.height})
       }
     }, 100)
@@ -193,11 +198,9 @@ export default class Index extends React.Component<Props, State> {
       };
     }
     this.refs.results.setState({selected_id: null, page: 0, sort_column: null, sort_order: ''});
-    this.setState({established_query: normalizeQuery(query), display_customs: false});
+    this.setState({established_query: normalizeQuery(query)});
     let onSearch = this.props.onSearch || null;
-    if (onSearch) {
-      onSearch(normalizeQuery(query));
-    }
+    if (onSearch) onSearch(normalizeQuery(query));
   }
 
   judgeMode(params: { [string]: string }) {
@@ -213,14 +216,13 @@ export default class Index extends React.Component<Props, State> {
 
   switchAdvanced(e: SyntheticEvent<>) {
     e.preventDefault();
-    this.setState({mode: 'advanced', display_customs: false, established_query: normalizeQuery({})});
+    this.setState({mode: 'advanced', established_query: normalizeQuery({})});
   }
 
   switchSimple(e: SyntheticEvent<>) {
     e.preventDefault();
     this.setState({
       mode: 'simple',
-      display_customs: false,
       established_query: normalizeQuery({})
     });
   }
@@ -236,19 +238,19 @@ export default class Index extends React.Component<Props, State> {
     let newState: {
       filter: number,
       filterMessage: string,
-      display_customs?: boolean,
-      includes?: Array<number>
+      includes?: Array<number>,
+      region: string
     } = {
       filter: filterItem.id,
       filterMessage: filterItem.message ? filterItem.message : ''
     };
-    if (filterItem.custom) {
-      newState.display_customs = true;
+    newState.includes = filterItem.includes.concat();
+    if (newState.region !== filterItem.region || this.props.region) {
+      newState.region = filterItem.region || this.props.region;
+      this.setState(newState);
     } else {
-      newState.display_customs = false;
-      newState.includes = filterItem.includes.concat();
+      this.setState(newState);
     }
-    this.setState(newState);
     this.refs.results.setState({page: 0});
   }
 
@@ -264,6 +266,19 @@ export default class Index extends React.Component<Props, State> {
   }
 
   render() {
+    // 情報を持っていないregionの場合はデータを取得する
+    if (!(this.state.region in this.state.mapping)) {
+      console.log("test");
+      this.state.mapping[this.state.region] = {
+        name_to_id: {},
+        libraries: {}
+      };
+      fetchMapping(this.state.region, (res) => {
+        this.state.mapping[this.state.region] = res;
+        this.setState({});
+      });
+    }
+
     if (this.requestUpdateURL) {
       if (history.pushState && history.state !== undefined) {
         let query_string = buildQueryString(this.state.established_query, this.state.mode, this.state.filter);
@@ -282,8 +297,9 @@ export default class Index extends React.Component<Props, State> {
           <div className="box">
             <input type="search" id="free"
                    autoFocus="on"
+                   ref="freeword"
                    value={this.state.query.free} onChange={this.updateHandler.bind(this)}
-                   placeholder="フリーワード"/>
+                   placeholder={this.props.freewordPlaceholder ? this.props.freewordPlaceholder : "フリーワード"}/>
             <button type="submit" id="searchButton">検索</button>
           </div>
           <button className="advanced" onClick={this.switchAdvanced.bind(this)}>詳細検索</button>
@@ -304,7 +320,7 @@ export default class Index extends React.Component<Props, State> {
           <div className="items">
             <div>
               <label htmlFor="title">タイトル</label>
-              <input {...editProps('title')}/>
+              <input {...editProps('title')} autoFocus="on"/>
             </div>
             <div>
               <label htmlFor="author">著者名</label>
@@ -329,63 +345,6 @@ export default class Index extends React.Component<Props, State> {
               <label htmlFor="isbn">ISBN</label>
               <input {...editProps('isbn')}/>
             </div>
-            {(() => {
-              if (this.props.showAreas === true) {
-                let ix = [];
-                return (
-                  <div className="areas">
-                    <label id="areaslabel">対象地域</label>
-                    <div className="selector" role="radiogroup" aria-labelledby="areaslabel">
-                      {this.props.filters.map((f) => {
-                        return (
-                          <button type="button"
-                                  role="radio"
-                                  aria-checked={this.state.filter === f.id}
-                                  className={(this.state.filter === f.id ? 'active' : '')}
-                                  onClick={this.changeFilter.bind(this)}
-                                  data-id={f.id}
-                                  key={f.id}>{(f.name_short) ? f.name_short : f.name }</button>
-                        );
-                      })}
-                    </div>
-                    {(() => {
-                      if (this.state.display_customs) {
-                        return (
-                          <div className="customs">
-                            { this.props.filters.map((f) => {
-                              if (f.includes.length > 0) {
-                                return (
-                                  <div key={f.id}>
-                                    <h3>{f.name}</h3>
-                                    {f.includes.map((id) => {
-                                      if (ix.indexOf(id) === -1) {
-                                        ix.push(id);
-                                        return (
-                                          <div key={id}>
-                                            <input type="checkbox"
-                                                   data-id={id}
-                                                   id={'f-' + id}
-                                                   onClick={this.changeCustom.bind(this)}
-                                                   defaultChecked={this.state.includes.indexOf(id) !== -1}/>
-                                            <label
-                                              htmlFor={'f-' + id}>{this.state.libraries[id]}</label>
-                                          </div>
-                                        );
-
-                                      }
-                                    })}
-                                  </div>
-                                );
-                              }
-                            })}
-                          </div>
-                        );
-                      }
-                    })()}
-                  </div>
-                )
-              }
-            })()}
             <div className="actions">
               <button type="submit" id="searchButton">検索</button>
               <button className="simple" onClick={this.switchSimple.bind(this)} tabIndex="0">フリーワードに戻る</button>
@@ -408,7 +367,15 @@ export default class Index extends React.Component<Props, State> {
                 <fieldset>
                   <legend>{this.props.welcomeTitle}</legend>
                   <div className="items">
-                    {this.props.welcomeMessage}
+                    {(() => {
+                      if (typeof this.props.welcomeMessage === 'function' && !!this.props.welcomeMessage.prototype.isReactComponent) {
+                        return (
+                          <this.props.welcomeMessage/>
+                        )
+                      } else {
+                        return this.props.welcomeMessage
+                      }
+                    })()}
                     {this.props.welcomeLinks.map((library, i) => {
                       if (library.url === '') {
                         return (
@@ -427,7 +394,9 @@ export default class Index extends React.Component<Props, State> {
           }
         })()}
         <Results ref="results"
-                 region={this.props.region}
+                 region={this.state.region}
+                 mapping={this.state.mapping}
+                 is_multiple_region={this.state.is_multiple_region}
                  excludes={this.props.excludes}
                  lazyHidden={this.props.lazyHidden}
                  rows={this.props.rows}
@@ -440,11 +409,9 @@ export default class Index extends React.Component<Props, State> {
                  query={this.state.established_query}
                  selected_id={getHash()}
                  filters={this.props.filters}
-                 libraries={this.state.libraries}
                  filter={this.state.filter}
                  filterMessage={this.state.filterMessage}
                  includes={this.state.includes}
-                 name_to_id={this.state.name_to_id}
                  showLogo={this.props.showLogo}
                  linkLogo={this.props.linkLogo}
                  changeFilter={this.changeFilter.bind(this)}
