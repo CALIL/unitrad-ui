@@ -3,13 +3,13 @@
 
  Unitrad UI Book
 
- Copyright (c) 2017 CALIL Inc.
+ Copyright (c) 2018 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
-import * as React from 'react';
+import React from 'react';
 import {api} from '../api.js'
 import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort.js'
 
@@ -57,9 +57,33 @@ export default class Book extends React.Component<Props, State> {
 
   doUpdate(data: UnitradResult) {
     processExcludes(data.books, this.props.excludes);
+
+    // 高精度化実験
+    let book_deep;
+    if (data.books.length >= 1) {
+      if (!book_deep) {
+        book_deep = {
+          url: {},
+          holdings: [],
+        };
+      }
+      data.books.map((book) => {
+        book_deep.holdings = [...book_deep.holdings, ...book.holdings];
+        for (let id in book.url) {
+          if (book.url.hasOwnProperty(id)) {
+            if (!book_deep.url.hasOwnProperty(id)) {
+              book_deep.url[id] = book.url[id];
+            }
+          }
+        }
+      })
+    } else {
+      book_deep = null;
+    }
+
     this.setState({
       uuid: data.uuid,
-      book_deep: (data.books.length >= 1) ? data.books[0] : null,
+      book_deep: book_deep, //(data.books.length >= 1) ? data.books[0] : null
       unresolvedHoldings: unresolvedHoldings(data, this.props.name_to_id)
     });
   }
@@ -88,8 +112,10 @@ export default class Book extends React.Component<Props, State> {
       _holdings = _holdings.concat(this.props.book.estimated_holdings);
     }
     let virtual_holdings = _holdings.filter((x, i, self) => self.indexOf(x) === i);
+
     // 所蔵館数を計算する
     let hcount = countHoldings(virtual_holdings, this.props.includes);
+
     return (
       <div tabIndex="0" className={'row book ' + (this.props.opened ? 'opened' : '')}
            role="row"
@@ -148,8 +174,7 @@ export default class Book extends React.Component<Props, State> {
         <div className="holdings" role="gridcell">
           {(() => {
             if (this.props.opened) {
-              return (<button role="button" aria-label="閉じる" tabIndex="0" className="close"
-                              onClick={this.props.onClose.bind(this)}>&times;</button>)
+              return (<button role="button" aria-label="閉じる" tabIndex="0" className="close" onClick={this.props.onClose.bind(this)}>&times;</button>)
             } else {
               if (hcount === 1) {
                 let vid;
@@ -210,7 +235,12 @@ export default class Book extends React.Component<Props, State> {
                       ref = window.location.href.split('?')[0] + '?isbn=' + this.props.book.isbn;
                     }
                     return (
-                      <this.props.customDetailView url={ref} book={this.props.book} holdings={virtual_holdings}/>);
+                      <this.props.customDetailView url={ref}
+                                                   uuid={this.props.uuid}
+                                                   book={this.props.book}
+                                                   deep_book={this.state.book_deep}
+                                                   libraries={this.props.libraries}
+                                                   holdings={virtual_holdings}/>);
                   }
                 })()}
                 <div className="links">
@@ -226,13 +256,6 @@ export default class Book extends React.Component<Props, State> {
                         uuid = this.state.uuid;
                       }
                       if (url && this.props.holdingLinkReplacer) url = this.props.holdingLinkReplacer(url);
-
-                      // 山口内部用
-                      if (holding === 119584) {
-                        if (virtual_holdings.indexOf(104457) !== -1) {
-                          return
-                        }
-                      }
                       return (
                         <this.props.customHoldingView url={url}
                                                       key={holding}
