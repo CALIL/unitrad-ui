@@ -1,6 +1,6 @@
 {
   "name": "unitrad-ui",
-  "version": "1.4.4",
+  "version": "1.6.2",
   "description": "Standard web interface for the Library federated catalog.",
   "main": "index.html",
   "scripts": {
@@ -13,45 +13,57 @@
     "test": "test"
   },
   "devDependencies": {
-    "autoprefixer": "^7.1.0",
+    "autoprefixer": "^9.0.0",
     "babel-core": "^6.24.1",
-    "babel-eslint": "^8.0.0",
+    "babel-eslint": "^8.0.1",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",
     "babel-register": "^6.24.1",
-    "babelify": "^7.3.0",
+    "babelify": "^8.0.0",
     "browser-sync": "^2.18.8",
-    "browserify": "^14.3.0",
+    "browserify": "^16.1.0",
     "bundle-collapser": "^1.2.1",
     "chai": "^4.0.0",
-    "cssnano": "^3.10.0",
+    "cssnano": "^4.0.0",
     "ejs": "^2.5.6",
     "eslint-plugin-flowtype": "^2.32.1",
-    "flow-bin": "^0.55.0",
+    "flow-bin": "^0.77.0",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.1",
     "gulp-ejs": "^3.0.1",
-    "gulp-header": "^1.8.8",
+    "gulp-header": "^2.0.1",
     "gulp-postcss": "^7.0.0",
-    "gulp-replace": "^0.6.1",
-    "gulp-sass": "^3.1.0",
+    "gulp-replace": "^1.0.0",
+    "gulp-sass": "^4.0.1",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-uglify": "^3.0.0",
     "gulp-util": "^3.0.8",
     "licensify": "^3.1.2",
     "minimist": "^1.2.0",
-    "mocha": "^3.4.2",
+    "mocha": "^5.0.1",
     "mocha-junit-reporter": "^1.13.0",
     "run-sequence": "^2.0.0",
     "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^2.0.0"
   },
   "babel": {
     "presets": [
-      "es2015",
+      [
+        "env",
+        {
+          "targets": {
+            "browsers": [
+              "last 2 versions",
+              "safari >= 7",
+              "ie 11"
+            ]
+          },
+          "useBuiltIns": true
+        }
+      ],
       "react"
     ],
     "plugins": [
@@ -72,10 +84,9 @@
   "homepage": "https://github.com/CALIL/unitrad-ui#readme",
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "react": "^15.5.4",
-    "react-addons-create-fragment": "^15.5.3",
-    "react-dom": "^15.5.4",
-    "react-paginate": "git://github.com/leonascimento/react-paginate.git",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "react-paginate": "5.2.3",
     "superagent": "^3.5.2"
   },
   "eslintConfig": {

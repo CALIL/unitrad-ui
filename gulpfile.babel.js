@@ -50,10 +50,11 @@ gulp.task('banner', () => {
 
 gulp.task('build:css', () => {
   /* CSSをビルドする */
+  let _autoprefixer = autoprefixer({browsers: ["last 2 versions", "safari >= 7", "ie 11", "Firefox ESR"]});
   return gulp.src(['./src/sass/app.sass'])
     .pipe(sass({'includePaths': ['./src/sass/', configDir]}))
     .on('error', gutil.log.bind(gutil, 'sass Error'))
-    .pipe(process.env.NODE_ENV === 'production' ? postcss([autoprefixer, cssnano]) : postcss([autoprefixer]))
+    .pipe(process.env.NODE_ENV === 'production' ? postcss([_autoprefixer, cssnano]) : postcss([_autoprefixer]))
     .pipe(gulp.dest(destDir))
     .pipe(browserSync.stream());
 });
@@ -83,7 +84,15 @@ gulp.task('build:js', () => {
       "babel-plugin-transform-flow-strip-types"
     ],
     presets: [
-      'es2015',
+      [
+        "env",
+        {
+          "targets": {
+            "browsers": ["last 2 versions", "safari >= 7", "ie 11", "Firefox ESR"]
+          },
+          "useBuiltIns": true
+        }
+      ],
       'react'
     ]
   })
@@ -96,9 +105,9 @@ gulp.task('build:js', () => {
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.init({loadMaps: true}) : gutil.noop())
     .pipe(process.env.NODE_ENV === 'production' ? uglify({output: {comments: /Modules in this bundle/mi}}) : gutil.noop())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.write('./map') : gutil.noop())
-    .pipe((page.replace_js && page.replace_js.length>0) ? replace(page.replace_js[0].match, page.replace_js[0].replacement) : gutil.noop())
-    .pipe((page.replace_js && page.replace_js.length>1) ? replace(page.replace_js[1].match, page.replace_js[1].replacement) : gutil.noop())
-    .pipe((page.replace_js && page.replace_js.length>2) ? replace(page.replace_js[2].match, page.replace_js[2].replacement) : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length > 0) ? replace(page.replace_js[0].match, page.replace_js[0].replacement) : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length > 1) ? replace(page.replace_js[1].match, page.replace_js[1].replacement) : gutil.noop())
+    .pipe((page.replace_js && page.replace_js.length > 2) ? replace(page.replace_js[2].match, page.replace_js[2].replacement) : gutil.noop())
     .pipe(gulp.dest(destDir));
 });
 
@@ -106,6 +115,9 @@ gulp.task('build:js', () => {
 gulp.task('build:html', ['copy:assets:local', 'copy:assets:global'], () => {
   /* HTMLをビルドする */
   let page = JSON.parse(fs.readFileSync(configDir + 'pageconfig.json'));
+  if (process.env.NODE_ENV !== 'production') {
+    page.siteUrl = null;
+  }
   let values = {
     page: page,
     url: page.siteUrl,
