@@ -1,8 +1,0 @@
-machine:
-  node:
-    version: 7.9.0
-test:
-  override:
-    - mocha test --reporter mocha-junit-reporter --require babel-core/register:
-        environment:
-          MOCHA_FILE: $CIRCLE_TEST_REPORTS/junit/test-results.xml
