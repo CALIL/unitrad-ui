@@ -2,8 +2,6 @@
 
 Reactで構築された蔵書検索のための汎用的なユーザーインターフェース。
 
-:seedling: 現在開発中のプレビュー版です
-
 ![スクリーン](doc/images/screen.png)
 
 ## 主な特徴
@@ -15,14 +13,12 @@ Reactで構築された蔵書検索のための汎用的なユーザーインタ
 ## ビルド
 
 ```bash
-npm update
+yarn install
 gulp release
 ```
 
 ## ロードマップ
 
-- ウェブアクセシビリティ対応（ほぼ完了）
-- セカンダリリージョン
 - ドキュメントの充実
 - Unitrad API以外への対応（OpenSearchなど）
 
@@ -37,7 +33,7 @@ gulp release
 
 The MIT License (MIT)
 
-Copyright (c) 2016 CALIL Inc.
+Copyright (c) 2018 CALIL Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
