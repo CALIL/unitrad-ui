@@ -3,13 +3,13 @@
 
  Unitrad UI Holding
 
- Copyright (c) 2017 CALIL Inc.
+ Copyright (c) 2018 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
-import * as React from 'react';
+import React from 'react';
 
 export const DefaultHoldingView = (props: {
   url: string,
