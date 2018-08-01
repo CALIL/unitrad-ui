@@ -3,13 +3,13 @@
 
  Unitrad UI 検索結果
 
- Copyright (c) 2017 CALIL Inc.
+ Copyright (c) 2018 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
  */
 
-import * as React from 'react';
+import React from 'react';
 import ReactPaginate from 'react-paginate';
 import {
   api,
@@ -38,8 +38,7 @@ type Props = {
   query: UnitradQuery,
   region: string,
   includes: Array<number>,
-  name_to_id: { [string]: Array<number> },
-  libraries: { [number]: string },
+  mapping: { [string]: Object },
   lazyHidden: ?Array<string>,
   externalLinks: Array<UIExternal>,
   holdingLinkReplacer: ?Function,
@@ -52,7 +51,8 @@ type Props = {
   hideSide: boolean,
   showLogo: boolean,
   filterMessage: ?string,
-  filterTitle: ?string
+  filterTitle: ?string,
+  is_multiple_region: boolean
 };
 
 
@@ -71,17 +71,18 @@ export default class Results extends React.Component<Props, State> {
       selected_id: this.props.selected_id,
       sort_column: '',
       sort_order: '',
-      sort_class: []
+      sort_class: [],
+      region: null
     };
   }
 
   doUpdate(data: UnitradResult) {
     processExcludes(data.books, this.props.excludes); // 除外データを削除する
-    this.setState({'result': data});
+    this.setState({'result': data, 'region': this.props.region});
   }
 
   componentDidMount() {
-    if (!isEqualQuery(this._query, this.props.query)) {
+    if (!isEqualQuery(this._query, this.props.query) || (this._query && this._query.region !== this.props.region)) {
       if (this.api) this.api.kill();
       this._query = normalizeQuery(this.props.query);
       this._query.region = this.props.region;
@@ -189,13 +190,14 @@ export default class Results extends React.Component<Props, State> {
   }
 
   filterRemains(remains: Array<string>) {
-    return filterRemains(remains, this.props.includes, this.props.name_to_id)
+    return filterRemains(remains, this.props.includes, this.props.mapping[this.props.region].name_to_id)
   }
 
   render() {
     let _books = [];
     let message: string = '';
     let notfound = false;
+    let complete = false;
     if (this.state.result && this.state.result.books) {
       _books = applyIncludes(this.state.result.books, this.props.includes);
       if (this.state.sort_order !== '') {
@@ -225,12 +227,15 @@ export default class Results extends React.Component<Props, State> {
             message += "あと " + _remains.length + "館。"
           }
         } else {
+          complete = true;
           if (_books.length > 0) {
             message = String(_books.length) + "件見つかりました。";
           } else if (!isEmptyQuery(this.props.query)) {
             message = "見つかりませんでした。";
             if (this.state.result && this.state.result.books && this.state.result.books.length === 0) {
               notfound = true;
+            } else {
+              message += "「" +(this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み") + "」を変更してみましょう。"
             }
           }
           let _errors = this.filterRemains(this.state.result.errors);
@@ -326,14 +331,14 @@ export default class Results extends React.Component<Props, State> {
             </div>
             {_books.slice(this.state.page * this.props.rows, this.state.page * this.props.rows + this.props.rows).map((book, idx) => {
               return (
-                <Book key={book.id}
+                <Book key={this.props.region + "-" + book.id}
                       book={book}
                       uuid={this.state.result ? this.state.result.uuid : ''}
                       index={idx + this.state.page * this.props.rows + 1}
                       opened={this.state.selected_id === book.id}
-                      libraries={this.props.libraries}
                       region={this.props.region}
-                      name_to_id={this.props.name_to_id}
+                      libraries={this.props.mapping[this.state.region].libraries}
+                      name_to_id={this.props.mapping[this.state.region].name_to_id}
                       excludes={this.props.excludes}
                       includes={this.props.includes}
                       holdingLinkReplacer={this.props.holdingLinkReplacer}
@@ -351,19 +356,34 @@ export default class Results extends React.Component<Props, State> {
                 return (
                   <ReactPaginate previousLabel="前のページ"
                                  nextLabel="次のページ"
-                                 titlePrev="前のページに移動する"
-                                 titleNext="次のページに移動する"
                                  pageClassName="page"
                                  breakLabel="..."
-                                 pageNum={Math.ceil(_books.length / this.props.rows)}
+                                 pageCount={Math.ceil(_books.length / this.props.rows)}
                                  marginPagesDisplayed={2}
-                                 forceSelected={this.state.page}
+                                 forcePage={this.state.page}
                                  pageRangeDisplayed={5}
-                                 clickCallback={this.handlePageClick.bind(this)}
+                                 onPageChange={this.handlePageClick.bind(this)}
                                  containerClassName={"pagination"}
-                                 subContainerClassName={"pages pagination"}
                                  activeClassName={"active"}/>
                 );
+              }
+            })()}
+            {(() => {
+              if (this.props.hideSide === true && this.props.externalLinks.length > 0) {
+                return (
+                  <div className={complete ? 'externals show' : 'externals hide'}>
+                    <span>外部サイトでさらに検索</span>
+                    <div>
+                      {this.props.externalLinks.map((f, idx) => {
+                        return (
+                          <a href={f.url(this.props.query)}
+                             key={'ext_' + idx}
+                             target="_blank"
+                             title={f.description}>{f.label}</a>);
+                      })}
+                    </div>
+                  </div>
+                )
               }
             })()}
           </div>
@@ -372,10 +392,9 @@ export default class Results extends React.Component<Props, State> {
           if (this.props.hideSide === false) {
             return (
               <div
-                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0)) ? 'empty' : 'show')}>
+                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0 && this.props.filter === 0 && !this.props.is_multiple_region)) ? 'empty' : 'show')}>
                 <div className="block" style={{display: isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
-                  <p id="regionslabel"
-                     className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
+                  <p id="regionslabel" className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
                   <div className="items" role="radiogroup" aria-labelledby="regionslabel">
                     {this.props.filters.map((f) => {
                       return (
