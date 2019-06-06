@@ -295,9 +295,11 @@ export default class Index extends React.Component<Props, State> {
       form = (
         <div className="container" ref="box">
           <div className="box">
-            <input type="search" id="free"
+            <input type="search" 
+                   id="free"
                    autoFocus="on"
                    ref="freeword"
+                   aria-label="フリーキーワード"
                    value={this.state.query.free} onChange={this.updateHandler.bind(this)}
                    placeholder={this.props.freewordPlaceholder ? this.props.freewordPlaceholder : "フリーワード"}/>
             <button type="submit" id="searchButton">検索</button>
