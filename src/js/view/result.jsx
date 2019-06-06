@@ -272,7 +272,7 @@ export default class Results extends React.Component<Props, State> {
 
     return (
       <div
-        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '')}>
+        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '') }>
         <div className="emresults">
           <div className={'message ' + (isEmptyQuery(this.props.query) ? 'empty' : '')}>
             <span role="log" aria-live="polite" aria-atomic="true">{messageAria}</span>
@@ -391,8 +391,7 @@ export default class Results extends React.Component<Props, State> {
         {(() => {
           if (this.props.hideSide === false) {
             return (
-              <div
-                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0 && this.props.filter === 0 && !this.props.is_multiple_region)) ? 'empty' : 'show')}>
+              <div className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0 && this.props.filter === 0 && !this.props.is_multiple_region)) ? 'empty' : 'show')}>
                 <div className="block" style={{display: isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
                   <p id="regionslabel" className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
                   <div className="items" role="radiogroup" aria-labelledby="regionslabel">

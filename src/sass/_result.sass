@@ -36,6 +36,8 @@
         transition: opacity 0.2s
         line-height: rem(2)
         margin-bottom: rem(1)
+        @media screen and (max-width: 768px)
+            margin-top: rem(1)
         &.empty
             opacity: 0
         .notFound
@@ -309,6 +311,7 @@
                     cursor: pointer
                     font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif
                     font-size: rem(1.8)
+                    line-height: rem(2)
                     z-index: 10000
                     background-color: #808080
                     transition: opacity 0.3s
