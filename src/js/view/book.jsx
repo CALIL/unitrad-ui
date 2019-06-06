@@ -237,6 +237,7 @@ export default class Book extends React.Component<Props, State> {
                     return (
                       <this.props.customDetailView url={ref}
                                                    uuid={this.props.uuid}
+                                                   uuid_deep={this.state.uuid}
                                                    book={this.props.book}
                                                    deep_book={this.state.book_deep}
                                                    libraries={this.props.libraries}
