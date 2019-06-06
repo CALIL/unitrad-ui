@@ -1,4 +1,4 @@
-# Unitrad UI [![Code Climate](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/badges/0e1c7d8b4feeac816b58/gpa.svg)](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/feed)
+# Unitrad UI [![CircleCI](https://circleci.com/gh/CALIL/unitrad-view.svg?style=svg&circle-token=d24be688449a3d6069f5614b642e7f16c4129a8a)](https://circleci.com/gh/CALIL/unitrad-view) [![Code Climate](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/badges/0e1c7d8b4feeac816b58/gpa.svg)](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/feed)
 
 Reactで構築された蔵書検索のための汎用的なユーザーインターフェース。
 
@@ -13,12 +13,14 @@ Reactで構築された蔵書検索のための汎用的なユーザーインタ
 ## ビルド
 
 ```bash
-yarn install
+npm update
 gulp release
 ```
 
 ## ロードマップ
 
+- ウェブアクセシビリティ対応（ほぼ完了）
+- セカンダリリージョン
 - ドキュメントの充実
 - Unitrad API以外への対応（OpenSearchなど）
 
@@ -33,7 +35,7 @@ gulp release
 
 The MIT License (MIT)
 
-Copyright (c) 2018 CALIL Inc.
+Copyright (c) 2019 CALIL Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,0 +1,12 @@
+{
+    "plugins": [
+        "@babel/plugin-transform-flow-strip-types",
+        "@babel/plugin-proposal-class-properties"
+    ],
+    "presets": [
+        ["@babel/preset-env", {
+            "useBuiltIns": "usage"
+        }],
+        "@babel/preset-react"
+    ]
+}

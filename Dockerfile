@@ -1,5 +1,5 @@
-FROM node:10
-RUN npm install -g yarn
+FROM node:12
+RUN npm install
 COPY ./ /js/
 WORKDIR /js/
 RUN yarn install
