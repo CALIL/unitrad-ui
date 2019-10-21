@@ -65,6 +65,7 @@ export default class Book extends React.Component<Props, State> {
         book_deep = {
           url: {},
           holdings: [],
+          bid: {}
         };
       }
       data.books.map((book) => {
@@ -73,6 +74,7 @@ export default class Book extends React.Component<Props, State> {
           if (book.url.hasOwnProperty(id)) {
             if (!book_deep.url.hasOwnProperty(id)) {
               book_deep.url[id] = book.url[id];
+              book_deep.bid[id] = book.id;
             }
           }
         }
@@ -249,11 +251,14 @@ export default class Book extends React.Component<Props, State> {
                     if (this.props.includes.length === 0 || this.props.includes.indexOf(holding) !== -1) {
                       let url = undefined;
                       let uuid = undefined;
+                      let bid = undefined;
                       if (this.props.book.url[holding]) {
                         url = this.props.book.url[holding];
                         uuid = this.props.uuid;
+                        bid = this.props.book.id;
                       } else if (this.state.book_deep && this.state.book_deep.url[holding]) {
                         url = this.state.book_deep.url[holding];
+                        bid = this.state.book_deep.bid[holding];
                         uuid = this.state.uuid;
                       }
                       if (url && this.props.holdingLinkReplacer) url = this.props.holdingLinkReplacer(url);
@@ -262,7 +267,7 @@ export default class Book extends React.Component<Props, State> {
                                                       key={holding}
                                                       uuid={uuid}
                                                       libid={holding}
-                                                      bid={this.props.book.id}
+                                                      bid={bid}
                                                       label={holding in this.props.libraries ? this.props.libraries[holding] : holding}/>
                       );
                     }
