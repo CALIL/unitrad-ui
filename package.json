@@ -8,24 +8,25 @@
     "start": "gulp debug",
     "release": "gulp release",
     "test": "mocha --require @babel/register",
-    "test-with-browser": "gulp test"
+    "test-with-browser": "gulp test",
+    "preinstall": "npx npm-force-resolutions"
   },
   "directories": {
     "test": "test"
   },
   "devDependencies": {
-    "@babel/core": "^7.8.4",
+    "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/plugin-transform-flow-strip-types": "^7.8.3",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-react": "^7.8.3",
-    "@babel/register": "^7.8.3",
-    "autoprefixer": "^9.7.4",
-    "babel-eslint": "^10.0.3",
+    "@babel/plugin-transform-flow-strip-types": "^7.9.0",
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-react": "^7.9.1",
+    "@babel/register": "^7.9.0",
+    "autoprefixer": "^9.7.5",
+    "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
     "browser-sync": "^2.26.7",
     "browserify": "^16.5.0",
-    "bundle-collapser": "^1.3.0",
+    "bundle-collapser": "^1.4.0",
     "chai": "^4.2.0",
     "chalk": "^3.0.0",
     "cssnano": "^4.1.10",
@@ -63,8 +64,8 @@
   "homepage": "https://github.com/CALIL/unitrad-ui#readme",
   "dependencies": {
     "core-js": "^3.6.4",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "react-paginate": "6.3.2",
     "superagent": "^5.2.2"
   },
@@ -87,5 +88,8 @@
       "node": true,
       "browser": true
     }
+  },
+  "resolutions": {
+    "minimist": "^1.2.5"
   }
 }
