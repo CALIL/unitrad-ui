@@ -200,7 +200,7 @@ debug ... デバッグ用にビルドしてウェブサーバーを起動
 }));
 
 
-gulp.task('browserSync:circleci', (done) => {
+gulp.task('browserSync:test', (done) => {
   browserSync.init({
     server: {
       baseDir: destDir,
@@ -216,11 +216,11 @@ gulp.task('browserSync:circleci', (done) => {
 });
 
 
-gulp.task('circleci', gulp.series(
+gulp.task('test', gulp.series(
     gulp.parallel(
       'build:html',
       'build:css',
       'build:js'),
-    gulp.parallel('browserSync:circleci', 'test') 
+    gulp.parallel('browserSync:test', 'test') 
 ));
 
