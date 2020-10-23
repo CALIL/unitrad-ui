@@ -3,7 +3,7 @@
 
  Unitrad UI Book
 
- Copyright (c) 2018 CALIL Inc.
+ Copyright (c) 2020 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
@@ -33,7 +33,8 @@ type Props = {
   libraries: { [number]: string },
   holdingOrder: ?Array<number>,
   customHoldingView: ?Function,
-  holdingLinkReplacer: ?Function
+  holdingLinkReplacer: ?Function,
+  remains: ?Array<string>
 }
 
 export default class Book extends React.Component<Props, State> {
@@ -85,6 +86,7 @@ export default class Book extends React.Component<Props, State> {
 
     this.setState({
       uuid: data.uuid,
+      remains: data.remains,
       book_deep: book_deep, //(data.books.length >= 1) ? data.books[0] : null
       unresolvedHoldings: unresolvedHoldings(data, this.props.name_to_id)
     });
@@ -199,9 +201,10 @@ export default class Book extends React.Component<Props, State> {
         </div>
         {(() => {
           if (this.props.opened) {
-            if (this.props.book.isbn !== '' && this.props.book.isbn !== '？' && !this.api) {
+            if (this.props.book.isbn !== '' && this.props.book.isbn !== '？' && this.props.book.isbn !== '(複数あり)' && !this.api) {
               // ISBNがある場合はAPIを呼び出す
               setTimeout(this.doDeepSearch.bind(this), 1000);
+              this.deep_requested = true;
             }
 
             if (this.props.holdingOrder) {
@@ -214,6 +217,8 @@ export default class Book extends React.Component<Props, State> {
                 if (_a > _b) return 1;
                 return 0;
               });
+            }else{
+              virtual_holdings.sort(); // holdingOrderがない場合はID順とする
             }
 
             return (
@@ -243,6 +248,7 @@ export default class Book extends React.Component<Props, State> {
                                                    book={this.props.book}
                                                    deep_book={this.state.book_deep}
                                                    libraries={this.props.libraries}
+                                                   remains={this.deep_requested ? (this.state.remains ? this.state.remains : null) : this.props.remains}
                                                    holdings={virtual_holdings}/>);
                   }
                 })()}

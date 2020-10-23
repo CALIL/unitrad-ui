@@ -91,7 +91,8 @@ export function unresolvedHoldings(data: UnitradResult, name_to_id: { [string]: 
 export function countHoldings(holdings: Array<number>, includes: Array<number>): number {
   if (includes.length === 0) return holdings.length;
   let count = 0;
-  includes.forEach((id) => {
+  let vi = [...new Set(includes)]; // フィルターに重複がある場合に対応（重複しないことが保証されればこのコードは不要）
+  vi.forEach((id) => {
     if (holdings.indexOf(id) !== -1) count++;
   });
   return count
@@ -227,8 +228,9 @@ export function normalizePubdate(p: string): number {
       let _day = 0;
       let _year = parseInt(_tmp[0], 10);
       if (_year < 100) {
-        if (_p.indexOf('昭和') !== -1) _year = 1926 + _year - 1;
+        if (_p.indexOf('令和') !== -1) _year = 2019 + _year - 1;
         if (_p.indexOf('平成') !== -1) _year = 1989 + _year - 1;
+        if (_p.indexOf('昭和') !== -1) _year = 1926 + _year - 1;
         if (_p.indexOf('大正') !== -1) _year = 1912 + _year - 1;
         if (_p.indexOf('明治') !== -1) _year = 1868 + _year - 1;
       }

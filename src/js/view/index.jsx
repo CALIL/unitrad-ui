@@ -3,7 +3,7 @@
 
  Unitrad UI 検索ボックス
 
- Copyright (c) 2018 CALIL Inc.
+ Copyright (c) 2020 CALIL Inc.
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
@@ -136,6 +136,7 @@ export default class Index extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    window.pressKey = this.onPressKey.bind(this);
     if (typeof history !== 'undefined' && history.pushState && history.state !== undefined) {
       window.addEventListener('popstate', (e) => this.onPopState(e));
     }
@@ -216,14 +217,13 @@ export default class Index extends React.Component<Props, State> {
 
   switchAdvanced(e: SyntheticEvent<>) {
     e.preventDefault();
-    this.setState({mode: 'advanced', established_query: normalizeQuery({})});
+    this.setState({mode: 'advanced'});
   }
 
   switchSimple(e: SyntheticEvent<>) {
     e.preventDefault();
     this.setState({
-      mode: 'simple',
-      established_query: normalizeQuery({})
+      mode: 'simple'
     });
   }
 
@@ -295,7 +295,7 @@ export default class Index extends React.Component<Props, State> {
       form = (
         <div className="container" ref="box">
           <div className="box">
-            <input type="search" 
+            <input type="search"
                    id="free"
                    autoFocus="on"
                    ref="freeword"

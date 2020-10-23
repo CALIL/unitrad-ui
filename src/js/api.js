@@ -113,7 +113,11 @@ export class api {
       this.callback(this.data);
       if (data.running === true) {
         console.log('[Unitrad] continue...');
-        setTimeout(() => this.polling(), 500);
+        if (data.version === 1 && this.data.books.length === 0) {
+          setTimeout(() => this.polling(), 20);
+        } else {
+          setTimeout(() => this.polling(), 500);
+        }
       } else {
         console.log('[Unitrad] complete.');
       }
@@ -162,7 +166,7 @@ export function isEmptyQuery(query: ?UnitradQuery): boolean {
 export function isEqualQuery(q1: UnitradQuery, q2: UnitradQuery): boolean {
   for (let k of FIELDS) {
     if (k === 'region') continue;
-    if ((q1 && q1.hasOwnProperty(k) ? q1[k] : '') !== (q2 && q2.hasOwnProperty(k) ? q2[k] : '' )) return false
+    if ((q1 && q1.hasOwnProperty(k) ? q1[k] : '') !== (q2 && q2.hasOwnProperty(k) ? q2[k] : '')) return false
   }
   return true
 }

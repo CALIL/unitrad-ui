@@ -220,11 +220,15 @@ export default class Results extends React.Component<Props, State> {
 
       if (this.state.result) {
         if (this.state.result.running && _remains.length > 0) {
-          message = String(_books.length) + "件見つかりました。";
-          if (_remains.length < 5 && (this.started && new Date() - this.started > 5000)) {
-            message += _remains.join(',') + "は時間がかかっています。";
+          if (this.started && new Date() - this.started < 1500 && _books.length === 0) {
+            message = 'さがしています。';
           } else {
-            message += "あと " + _remains.length + "館。"
+            message = String(_books.length) + "件見つかりました。";
+            if (_remains.length < 5 && (this.started && new Date() - this.started > 5000)) {
+              message += _remains.join(',') + "は時間がかかっています。";
+            } else {
+              message += "あと " + _remains.length + "館。"
+            }
           }
         } else {
           complete = true;
@@ -235,7 +239,7 @@ export default class Results extends React.Component<Props, State> {
             if (this.state.result && this.state.result.books && this.state.result.books.length === 0) {
               notfound = true;
             } else {
-              message += "「" +(this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み") + "」を変更してみましょう。"
+              message += "「" + (this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み") + "」を変更してみましょう。"
             }
           }
           let _errors = this.filterRemains(this.state.result.errors);
@@ -272,7 +276,7 @@ export default class Results extends React.Component<Props, State> {
 
     return (
       <div
-        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '') }>
+        className={'emcontainer' + ((this.props.hideSide === true) ? ' onecolumn' : '') + ((this.props.showFooter === true) ? ' showfooter' : '') + (isEmptyQuery(this.props.query) ? ' emptyall' : '')}>
         <div className="emresults">
           <div className={'message ' + (isEmptyQuery(this.props.query) ? 'empty' : '')}>
             <span role="log" aria-live="polite" aria-atomic="true">{messageAria}</span>
@@ -320,7 +324,7 @@ export default class Results extends React.Component<Props, State> {
                      className={header.id + ' sort'}
                      data-sort-column={header.id}
                      tabIndex="0"
-                     aria-sort={(this.state.sort_column === header.id) ? this.state.sort_order + 'ing' : 'none'}
+                     aria-sort={(this.state.sort_column === header.id && this.state.sort_order !== '') ? this.state.sort_order + 'ing' : 'none'}
                      onKeyUp={this.onSortKeyUp.bind(this)}
                      onClick={this.onSort.bind(this)}>
                     {header.label}
@@ -346,6 +350,7 @@ export default class Results extends React.Component<Props, State> {
                       customHoldingView={this.props.customHoldingView}
                       customDetailView={this.props.customDetailView}
                       isbnAdvanced={this.state.sort_column === 'isbn' && this.state.sort_order !== ''}
+                      remains={this.state.result ? this.state.result.remains : []}
                       onClose={this.onClose.bind(this)}
                       onSelect={this.onSelectBook.bind(this)}
                 />
