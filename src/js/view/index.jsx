@@ -136,7 +136,6 @@ export default class Index extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    window.pressKey = this.onPressKey.bind(this);
     if (typeof history !== 'undefined' && history.pushState && history.state !== undefined) {
       window.addEventListener('popstate', (e) => this.onPopState(e));
     }
