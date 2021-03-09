@@ -49,7 +49,6 @@
     "mocha": "^8.2.0",
     "mocha-junit-reporter": "^2.0.0",
     "postcss": "^8.1.4",
-    "puppeteer": "^5.4.0",
     "through2": "^4.0.2",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
