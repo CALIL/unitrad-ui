@@ -48,7 +48,7 @@
     "minimist": "^1.2.5",
     "mocha": "^8.2.0",
     "mocha-junit-reporter": "^2.0.0",
-    "postcss": "^8.1.4",
+    "postcss": "^8.2.10",
     "through2": "^4.0.2",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
