@@ -38,7 +38,7 @@
     "gulp-concat": "^2.6.1",
     "gulp-ejs": "^5.1.0",
     "gulp-header": "^2.0.9",
-    "gulp-mocha": "^7.0.2",
+    "gulp-mocha": "^8.0.0",
     "gulp-postcss": "^9.0.0",
     "gulp-replace": "^1.0.0",
     "gulp-sass": "^4.1.0",
