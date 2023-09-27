@@ -28,7 +28,8 @@ type State = {
   sort_order: '' | 'descend' | 'ascend',
   sort_class: Array<string>,
   page: number,
-  established_query?: UnitradQuery
+  established_query?: UnitradQuery,
+  region: string,
 };
 
 type Props = {
@@ -300,11 +301,12 @@ export default class Results extends React.Component<Props, State> {
               }
             })()}
           </div>
-          <div className={'results ' + (_books.length === 0 || isEmptyQuery(this.props.query) ? 'empty' : '')}
-               aria-busy={this.state.result && this.state.result.running}
-               aria-rowcount={_books.length}
-               aria-readonly="true"
-               role="grid">
+          <div
+            className={'results region-' + this.props.region + (_books.length === 0 || isEmptyQuery(this.props.query) ? ' empty' : '')}
+            aria-busy={this.state.result && this.state.result.running}
+            aria-rowcount={_books.length}
+            aria-readonly="true"
+            role="grid">
             <div className="row header" role="row">
               {headers.map((header) => {
                 let label = '';
@@ -340,7 +342,7 @@ export default class Results extends React.Component<Props, State> {
                       uuid={this.state.result ? this.state.result.uuid : ''}
                       index={idx + this.state.page * this.props.rows + 1}
                       opened={this.state.selected_id === book.id}
-                      region={this.props.region}
+                      region={this.state.region ? this.state.region : this.props.region}
                       libraries={this.props.mapping[this.state.region].libraries}
                       name_to_id={this.props.mapping[this.state.region].name_to_id}
                       excludes={this.props.excludes}
@@ -349,6 +351,7 @@ export default class Results extends React.Component<Props, State> {
                       holdingOrder={this.props.holdingOrder}
                       customHoldingView={this.props.customHoldingView}
                       customDetailView={this.props.customDetailView}
+                      coverImage={this.props.coverImage}
                       isbnAdvanced={this.state.sort_column === 'isbn' && this.state.sort_order !== ''}
                       remains={this.state.result ? this.state.result.remains : []}
                       onClose={this.onClose.bind(this)}
@@ -396,9 +399,11 @@ export default class Results extends React.Component<Props, State> {
         {(() => {
           if (this.props.hideSide === false) {
             return (
-              <div className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0 && this.props.filter === 0 && !this.props.is_multiple_region)) ? 'empty' : 'show')}>
+              <div
+                className={'emside ' + ((isEmptyQuery(this.props.query) || (this.state.result && this.state.result.books.length === 0 && this.props.filter === 0 && !this.props.is_multiple_region)) ? 'empty' : 'show')}>
                 <div className="block" style={{display: isEmptyQuery(this.props.query) ? 'none' : 'block'}}>
-                  <p id="regionslabel" className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
+                  <p id="regionslabel"
+                     className="filter">{this.props.filterTitle ? this.props.filterTitle : "地域で絞り込み"}</p>
                   <div className="items" role="radiogroup" aria-labelledby="regionslabel">
                     {this.props.filters.map((f) => {
                       return (

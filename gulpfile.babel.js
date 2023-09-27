@@ -1,7 +1,6 @@
 import parseArgs from "minimist";
 import fs from "fs";
 import gulp from "gulp";
-import sass from "gulp-sass";
 import autoprefixer from "autoprefixer";
 import postcss from "gulp-postcss";
 import browserSync from "browser-sync";
@@ -10,7 +9,6 @@ import browserify from "browserify";
 import babelify from "babelify";
 import source from "vinyl-source-stream";
 import buffer from "vinyl-buffer";
-import chalk from 'chalk';
 import through from 'through2';
 import sourcemaps from "gulp-sourcemaps";
 import gulpEjs from "gulp-ejs";
@@ -19,8 +17,9 @@ import header from "gulp-header";
 import licensify from "licensify";
 import cssnano from "cssnano";
 import replace from "gulp-replace";
-import mocha from 'gulp-mocha';
 
+var sass = require('gulp-sass')(require('sass'));
+const terser = require('gulp-terser');
 
 /* コマンドラインのオプションを解釈する */
 let args = parseArgs(process.argv.slice(2));
@@ -43,9 +42,9 @@ gulp.task('banner', (cb) => {
   let pkg = JSON.parse(fs.readFileSync('package.json'));
   console.log(banner);
   console.log('------------------------------------------');
-  console.log(chalk.yellow('バージョン:' + pkg.version));
-  console.log(chalk.yellow('設定パス:' + configDir));
-  console.log(chalk.yellow('出力先パス:' + destDir));
+  console.log('バージョン:' + pkg.version);
+  console.log('設定パス:' + configDir);
+  console.log('出力先パス:' + destDir);
   console.log('------------------------------------------');
   cb();
 });
@@ -90,14 +89,22 @@ gulp.task('build:js', () => {
     .pipe(header(confjs))
     .pipe(buffer())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.init({loadMaps: true}) : through.obj())
-    .pipe(process.env.NODE_ENV === 'production' ? uglify({output: {comments: /Modules in this bundle/mi}}) : through.obj())
+    .pipe(process.env.NODE_ENV === 'production' ? terser({
+      format: {
+        comments: /Modules in this bundle/mi,
+
+      }
+    }) : through.obj())
     .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.write('./map') : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 0) ? replace(page.replace_js[0].match, page.replace_js[0].replacement) : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 1) ? replace(page.replace_js[1].match, page.replace_js[1].replacement) : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 2) ? replace(page.replace_js[2].match, page.replace_js[2].replacement) : through.obj())
+    .pipe((page.replace_js && page.replace_js.length > 3) ? replace(page.replace_js[3].match, page.replace_js[3].replacement) : through.obj())
+    .pipe((page.replace_js && page.replace_js.length > 4) ? replace(page.replace_js[4].match, page.replace_js[4].replacement) : through.obj())
+    .pipe((page.replace_js && page.replace_js.length > 5) ? replace(page.replace_js[5].match, page.replace_js[5].replacement) : through.obj())
     .pipe(gulp.dest(destDir));
 });
-
+//uglify({output: {comments: /Modules in this bundle/mi}})
 
 gulp.task('copy:assets:local', () => {
   return gulp.src([configDir + 'assets/*'], {base: configDir}).pipe(gulp.dest(destDir))
@@ -136,6 +143,11 @@ gulp.task('browserSync:init', () => {
     server: {
       baseDir: destDir,
       index: 'index.html'
+    },
+    notify: {
+      styles: [
+        'bottom: 0px'
+      ]
     }
   });
   gulp.watch(['*.html', configDir + 'index.html'], gulp.task('browserSync:reload'));
@@ -144,19 +156,10 @@ gulp.task('browserSync:init', () => {
 });
 
 
-gulp.task('test', () => {
-    return gulp
-      .src('test/*.js', {read: false})
-      // `gulp-mocha` needs filepaths so you can't have any plugins before it
-      .pipe(mocha({reporter: 'list', require: '@babel/register', exit: true}));
-  }
-);
-
-
 gulp.task('debug', gulp.series(
   'banner',
   (cb) => {
-    console.log(chalk.yellow('デバッグモードを開始します...'));
+    console.log('デバッグモードを開始します...');
     cb();
   },
   gulp.parallel(
@@ -169,7 +172,7 @@ gulp.task('debug', gulp.series(
 gulp.task('release', gulp.series(
   'banner',
   (cb) => {
-    console.log(chalk.yellow('リリースビルドを開始します...'));
+    console.log('リリースビルドを開始します...');
     process.env.NODE_ENV = 'production';
     if (typeof args.dest !== 'string') {
       destDir = './build/release/';
@@ -214,13 +217,4 @@ gulp.task('browserSync:test', (done) => {
     }, 10000)
   });
 });
-
-
-gulp.task('test', gulp.series(
-    gulp.parallel(
-      'build:html',
-      'build:css',
-      'build:js'),
-    gulp.parallel('browserSync:test', 'test') 
-));
 

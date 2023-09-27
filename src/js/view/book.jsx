@@ -70,6 +70,10 @@ export default class Book extends React.Component<Props, State> {
         };
       }
       data.books.map((book) => {
+        // 検索結果が別のISBNの場合には無視する
+        if (book.id.indexOf('-') === -1 && book.id !== this.props.book.id) {
+          return
+        }
         book_deep.holdings = [...book_deep.holdings, ...book.holdings];
         for (let id in book.url) {
           if (book.url.hasOwnProperty(id)) {
@@ -135,6 +139,13 @@ export default class Book extends React.Component<Props, State> {
                ((this.props.book.isbn === '' || this.props.book.isbn === null) ? '' : 'ISBNあり。'))}
            onKeyUp={!this.props.opened ? this.onKeyUp.bind(this) : null}
            onClick={!this.props.opened ? this.props.onSelect.bind(this) : null}>
+        {(() => {
+          if (this.props.coverImage) {
+            return (
+              <this.props.coverImage {...this.props} />
+            )
+          }
+        })()}
         <div className="title" role="gridcell">
           {this.props.book.title}
           <span className="volume">{this.props.book.volume}</span>
@@ -178,7 +189,8 @@ export default class Book extends React.Component<Props, State> {
         <div className="holdings" role="gridcell">
           {(() => {
             if (this.props.opened) {
-              return (<button role="button" aria-label="閉じる" tabIndex="0" className="close" onClick={this.props.onClose.bind(this)}>&times;</button>)
+              return (<button role="button" aria-label="閉じる" tabIndex="0" className="close"
+                              onClick={this.props.onClose.bind(this)}>&times;</button>)
             } else {
               if (hcount === 1) {
                 let vid;
@@ -217,7 +229,7 @@ export default class Book extends React.Component<Props, State> {
                 if (_a > _b) return 1;
                 return 0;
               });
-            }else{
+            } else {
               virtual_holdings.sort(); // holdingOrderがない場合はID順とする
             }
 
@@ -274,6 +286,7 @@ export default class Book extends React.Component<Props, State> {
                                                       uuid={uuid}
                                                       libid={holding}
                                                       bid={bid}
+                                                      virtual_holdings={virtual_holdings} // 一時的な対応
                                                       label={holding in this.props.libraries ? this.props.libraries[holding] : holding}/>
                       );
                     }

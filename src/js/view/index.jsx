@@ -72,7 +72,8 @@ type Props = {
   welcomeTitle: ?string,
   welcomeLinks: Array<UILink>,
   onSearch: null | (query: UnitradQuery) => void,
-  freewordPlaceholder: ?string  //　フリーワードのプレースホルダー
+  freewordPlaceholder: ?string,  //　フリーワードのプレースホルダー
+  coverImage?: Function
 }
 
 export default class Index extends React.Component<Props, State> {
@@ -136,6 +137,7 @@ export default class Index extends React.Component<Props, State> {
   }
 
   componentDidMount() {
+    window.pressKey = this.onPressKey.bind(this);
     if (typeof history !== 'undefined' && history.pushState && history.state !== undefined) {
       window.addEventListener('popstate', (e) => this.onPopState(e));
     }
@@ -201,6 +203,39 @@ export default class Index extends React.Component<Props, State> {
     this.setState({established_query: normalizeQuery(query)});
     let onSearch = this.props.onSearch || null;
     if (onSearch) onSearch(normalizeQuery(query));
+  }
+
+  onPressKey(word) {
+    /* 砺波こども用のためのコード */
+    console.log("inside:" + word);
+    let freeword = this.state.query.free;
+    if (word === '[bs]') {
+      freeword = freeword.slice(0, -1);
+    } else if (word === '[search]') {
+      let query: UnitradQuery;
+      query = {free: this.state.query.free ? this.state.query.free : ''};
+      this.refs.results.setState({selected_id: null, page: 0, sort_column: null, sort_order: ''});
+      this.setState({established_query: normalizeQuery(query)});
+      let onSearch = this.props.onSearch || null;
+      if (onSearch) onSearch(normalizeQuery(query));
+      return
+    } else {
+      freeword += word;
+    }
+    freeword = window.jaco.combinateSoundMarks(freeword);
+    freeword = window.jaco.remove(freeword, /\u309B|\u3099|\uFF9E/g);
+    freeword = window.jaco.remove(freeword, /\u309C|\u309A|\uFF9F/g);
+    this.state.query.free = freeword;
+    this.setState({});
+    var elm = findDOMNode(this.refs.freeword);
+    elm.focus();
+    if (elm.createTextRange) {
+      var range = elm.createTextRange();
+      range.move('character', elm.value.length);
+      range.select();
+    } else if (elm.setSelectionRange) {
+      elm.setSelectionRange(elm.value.length, elm.value.length);
+    }
   }
 
   judgeMode(params: { [string]: string }) {
@@ -298,7 +333,7 @@ export default class Index extends React.Component<Props, State> {
                    id="free"
                    autoFocus="on"
                    ref="freeword"
-                   aria-label="フリーキーワード"
+                   aria-labelledby="searchButton"
                    value={this.state.query.free} onChange={this.updateHandler.bind(this)}
                    placeholder={this.props.freewordPlaceholder ? this.props.freewordPlaceholder : "フリーワード"}/>
             <button type="submit" id="searchButton">検索</button>
@@ -415,6 +450,7 @@ export default class Index extends React.Component<Props, State> {
                  includes={this.state.includes}
                  showLogo={this.props.showLogo}
                  linkLogo={this.props.linkLogo}
+                 coverImage={this.props.coverImage}
                  changeFilter={this.changeFilter.bind(this)}
                  filterTitle={this.props.filterTitle}
                  hideSide={this.props.hideSide}/>
@@ -427,11 +463,11 @@ export default class Index extends React.Component<Props, State> {
                   {(() => {
                     if (this.props.linkLogo && isEmptyQuery(this.state.established_query)) {
                       return (
-                        <a href="https://calil.jp/" target="_blank" tabIndex="-1" aria-label="カーリルのウェブサイトにリンク">
+                        <a href="https://calil.jp/" target="_blank" aria-label="このサービスの検索技術はカーリルが提供しています">
                           <span className="poweredby"/>
                         </a>)
                     } else {
-                      return <span className="poweredby"/>
+                      return <span className="poweredby" aria-label="このサービスの検索技術はカーリルが提供しています"/>
                     }
                   })()}
                 </div>
