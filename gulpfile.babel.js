@@ -4,7 +4,6 @@ import gulp from "gulp";
 import autoprefixer from "autoprefixer";
 import postcss from "gulp-postcss";
 import browserSync from "browser-sync";
-import uglify from "gulp-uglify";
 import browserify from "browserify";
 import babelify from "babelify";
 import source from "vinyl-source-stream";
