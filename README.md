@@ -1,4 +1,4 @@
-# Unitrad UI [![Code Climate](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/badges/0e1c7d8b4feeac816b58/gpa.svg)](https://codeclimate.com/repos/57dbd79e63c7b449d2002209/feed)
+# Unitrad UI [![Maintainability](https://api.codeclimate.com/v1/badges/fd825472d8b0ac9e00d6/maintainability)](https://codeclimate.com/github/CALIL/unitrad-ui/maintainability)
 
 Reactで構築された蔵書検索のための汎用的なユーザーインターフェース。
 
