@@ -24,7 +24,7 @@
     "autoprefixer": "^10.4.16",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
-    "browser-sync": "^2.29.3",
+    "browser-sync": "^3.0.2",
     "browserify": "^17.0.0",
     "bundle-collapser": "^1.4.0",
     "chai": "^4.3.10",
