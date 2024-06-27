@@ -33,7 +33,7 @@
     "eslint": "^8.53.0",
     "eslint-plugin-flowtype": "^8.0.3",
     "flow-bin": "^0.220.1",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "gulp-concat": "^2.6.1",
     "gulp-ejs": "^5.1.0",
     "gulp-header": "^2.0.9",
