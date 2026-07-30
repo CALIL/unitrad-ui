@@ -1,6 +1,6 @@
 {
   "name": "unitrad-ui",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Standard web interface for the Library federated catalog.",
   "main": "index.html",
   "type": "commonjs",
