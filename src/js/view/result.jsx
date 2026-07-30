@@ -33,6 +33,7 @@ type State = {
 };
 
 type Props = {
+  filter: number,
   filters: Array<UIFilter>,
   excludes: Array<number>,
   selected_id: ?string,
@@ -274,6 +275,10 @@ export default class Results extends React.Component<Props, State> {
       {label: 'ISBN', id: 'isbn'},
       {label: '所蔵館', id: 'holdings'}
     ];
+    let classNames = ['results', `region-${this.props.region}`, `filter-${this.props.filter}`];
+    if (_books.length === 0 || isEmptyQuery(this.props.query)) {
+      classNames.push('empty');
+    }
 
     return (
       <div
@@ -302,7 +307,7 @@ export default class Results extends React.Component<Props, State> {
             })()}
           </div>
           <div
-            className={'results region-' + this.props.region + (_books.length === 0 || isEmptyQuery(this.props.query) ? ' empty' : '')}
+            className={classNames.join(' ')}
             aria-busy={this.state.result && this.state.result.running}
             aria-rowcount={_books.length}
             aria-readonly="true"
@@ -442,7 +447,8 @@ export default class Results extends React.Component<Props, State> {
                     if (this.props.linkLogo && isEmptyQuery(this.state.established_query)) {
                       return (
                         <div className="sidelogo">
-                          <a href="https://calil.jp/" target="_blank" tabIndex="-1" aria-label="カーリルのウェブサイトにリンク">
+                          <a href="https://calil.jp/" target="_blank" tabIndex="-1"
+                             aria-label="カーリルのウェブサイトにリンク">
                             <span className="poweredby"/>
                           </a>
                         </div>

@@ -1,4 +1,4 @@
-# Unitrad UI [![Maintainability](https://api.codeclimate.com/v1/badges/fd825472d8b0ac9e00d6/maintainability)](https://codeclimate.com/github/CALIL/unitrad-ui/maintainability)
+# Unitrad UI
 
 Reactで構築された蔵書検索のための汎用的なユーザーインターフェース。
 
@@ -34,7 +34,7 @@ gulp release
 
 The MIT License (MIT)
 
-Copyright (c) 2023 CALIL Inc.
+Copyright (c) 2026 CALIL Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

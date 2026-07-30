@@ -1,0 +1,53 @@
+/* ------------------------------------------------------------------------------------- */
+/* 強制カラーモード */
+// 基本的にはブラウザに任せる
+// 必要なもののみ変更する
+// System Colorsのキーワードは以下に仕様がある
+// https://www.w3.org/TR/css-color-4/#css-system-colors
+
+@media (forced-colors: active)
+    body
+        #app
+            .emtop
+                &.simple
+                    .advanced
+                        padding: 0 0.5rem
+                        background-color: ButtonFace
+                        border: 1px solid ButtonBorder
+
+                &.advanced
+                    > .container
+                        > .items
+                            > div.actions
+                                #searchButton
+                                    border: 1px solid ButtonBorder
+
+                                    &:hover
+                                        color: LinkText
+                                        border: 1px solid LinkText
+
+                                .simple
+                                    border-bottom: none
+
+                                    &:hover
+                                        color: LinkText
+                                        border-bottom: none
+
+            .emcontainer
+                .emside
+                    .block
+                        .items
+                            button.active
+                                background-color: SelectedItem
+                                color: ActiveText
+
+                .emresults
+                    .results
+                        .book
+                            .holdings
+                                .count, .close
+                                    border: 1px solid ButtonBorder
+                            .detail
+                                .links
+                                    > a
+                                       border: 1px solid ButtonBorder

@@ -190,11 +190,28 @@ export function stripQuery(query: UnitradQuery): UnitradQuery {
 /**
  * マッピングデータを取得する
  * @param region {String} リージョン
- * @param callback(data) コールバック関数
+ * @param callback
  */
 export function fetchMapping(region: string, callback: (data: any) => void): void {
-  _request('mapping').query({'region': region}).end((err, res) => {
-    callback(res.body)
-  })
+  const MAX_RETRIES = 10; // 最大リトライ回数
+  const RETRY_DELAY = 2000; // リトライ間隔（ミリ秒）
+  let attempt = 0;
+
+  function tryFetch() {
+    _request('mapping')
+      .query({'region': region})
+      .end((err, res) => {
+        if (!err) {
+          callback(res.body);
+        } else if (attempt < MAX_RETRIES) {
+          attempt++;
+          setTimeout(tryFetch, RETRY_DELAY);
+        } else {
+          console.error(`[fetchMapping] Failed after ${MAX_RETRIES} retries.`);
+        }
+      });
+  }
+
+  tryFetch();
 }
 

@@ -9,21 +9,22 @@ import babelify from "babelify";
 import source from "vinyl-source-stream";
 import buffer from "vinyl-buffer";
 import through from 'through2';
-import sourcemaps from "gulp-sourcemaps";
 import gulpEjs from "gulp-ejs";
 import ejs from "ejs";
-import header from "gulp-header";
+import header from "@fomantic/gulp-header";
 import licensify from "licensify";
 import cssnano from "cssnano";
 import replace from "gulp-replace";
 
-var sass = require('gulp-sass')(require('sass'));
+const sass = require('gulp-sass/legacy')(require('sass'));
 const terser = require('gulp-terser');
 
 /* コマンドラインのオプションを解釈する */
 let args = parseArgs(process.argv.slice(2));
 let destDir = (typeof args.dest === 'string') ? args.dest : './build/debug/';
 let configDir = (typeof args.conf === 'string') ? args.conf : './conf/';
+/* --port でプレビューサーバーのポートを変更する（git worktree等で並行起動するとき用）*/
+let serverPort = Number.isInteger(Number(args.port)) && Number(args.port) > 0 ? Number(args.port) : 3000;
 
 let banner = `
 
@@ -44,6 +45,7 @@ gulp.task('banner', (cb) => {
   console.log('バージョン:' + pkg.version);
   console.log('設定パス:' + configDir);
   console.log('出力先パス:' + destDir);
+  console.log('ポート:' + serverPort);
   console.log('------------------------------------------');
   cb();
 });
@@ -52,11 +54,67 @@ gulp.task('banner', (cb) => {
 gulp.task('build:css', () => {
   /* CSSをビルドする */
   let _autoprefixer = autoprefixer();
+  const path = require('path');
+
+  // デバッグ情報を出力
+  console.log('\n========== SASS Build Configuration ==========');
+  console.log('Source file: ./src/sass/app.sass');
+  console.log('Config directory: ' + configDir);
+  console.log('Output directory: ' + destDir);
+  console.log('Include paths:', ['./src/sass/', configDir]);
+
+  // ファイルの存在確認
+  const checkFiles = [
+    path.join(configDir, 'config.sass'),
+    path.join(configDir, 'index.sass'),
+    './src/sass/app.sass'
+  ];
+
+  checkFiles.forEach(file => {
+    try {
+      fs.accessSync(file);
+      console.log(`✓ File exists: ${file}`);
+    } catch (e) {
+      console.log(`✗ File NOT found: ${file}`);
+    }
+  });
+  console.log('===============================================\n');
+
   return gulp.src(['./src/sass/app.sass'])
-    .pipe(sass({'includePaths': ['./src/sass/', configDir]}))
-    .on('error', (err) => {
-      console.log(err.message);
-    })
+    .pipe(sass({
+      'includePaths': ['./src/sass/', configDir]
+    }).on('error', function (err) {
+      console.error('\n========== SASS Compilation Error ==========');
+      console.error('Error Type:', err.name);
+      console.error('Error Message:', err.message);
+
+      if (err.file) {
+        console.error('File:', err.file);
+      }
+
+      if (err.line) {
+        console.error('Line:', err.line);
+        console.error('Column:', err.column);
+      }
+
+      if (err.formatted) {
+        console.error('\nFormatted error:');
+        console.error(err.formatted);
+      }
+      console.error('\nFull error object:');
+      console.error(JSON.stringify({
+        name: err.name,
+        message: err.message,
+        file: err.file,
+        line: err.line,
+        column: err.column,
+        status: err.status,
+        messageFormatted: err.messageFormatted
+      }, null, 2));
+      console.error('=============================================\n');
+
+      this.emit('end');
+    }))
     .pipe(process.env.NODE_ENV === 'production' ? postcss([_autoprefixer, cssnano]) : postcss([_autoprefixer]))
     .pipe(gulp.dest(destDir))
     .pipe(browserSync.stream());
@@ -87,14 +145,12 @@ gulp.task('build:js', () => {
     .pipe(source('app.js'))
     .pipe(header(confjs))
     .pipe(buffer())
-    .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.init({loadMaps: true}) : through.obj())
     .pipe(process.env.NODE_ENV === 'production' ? terser({
       format: {
         comments: /Modules in this bundle/mi,
 
       }
     }) : through.obj())
-    .pipe(process.env.NODE_ENV !== 'production' ? sourcemaps.write('./map') : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 0) ? replace(page.replace_js[0].match, page.replace_js[0].replacement) : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 1) ? replace(page.replace_js[1].match, page.replace_js[1].replacement) : through.obj())
     .pipe((page.replace_js && page.replace_js.length > 2) ? replace(page.replace_js[2].match, page.replace_js[2].replacement) : through.obj())
@@ -103,15 +159,15 @@ gulp.task('build:js', () => {
     .pipe((page.replace_js && page.replace_js.length > 5) ? replace(page.replace_js[5].match, page.replace_js[5].replacement) : through.obj())
     .pipe(gulp.dest(destDir));
 });
-//uglify({output: {comments: /Modules in this bundle/mi}})
+
 
 gulp.task('copy:assets:local', () => {
-  return gulp.src([configDir + 'assets/*'], {base: configDir}).pipe(gulp.dest(destDir))
+  return gulp.src([configDir + 'assets/*'], {base: configDir, encoding: false}).pipe(gulp.dest(destDir))
 });
 
 
 gulp.task('copy:assets:global', () => {
-  return gulp.src(['src/assets/*'], {base: 'src'}).pipe(gulp.dest(destDir))
+  return gulp.src(['src/assets/*'], {base: 'src', encoding: false}).pipe(gulp.dest(destDir))
 });
 
 
@@ -143,6 +199,9 @@ gulp.task('browserSync:init', () => {
       baseDir: destDir,
       index: 'index.html'
     },
+    port: serverPort,
+    // UI用ポート(既定3001)もずらして、別worktreeのサーバーと衝突させない
+    ui: { port: serverPort + 1 },
     notify: {
       styles: [
         'bottom: 0px'
@@ -150,7 +209,7 @@ gulp.task('browserSync:init', () => {
     }
   });
   gulp.watch(['*.html', configDir + 'index.html'], gulp.task('browserSync:reload'));
-  gulp.watch(['./src/sass/*.sass', configDir + 'index.sass'], gulp.task('build:css'));
+  gulp.watch(['./src/sass/*.sass', configDir + '*.sass'], gulp.task('build:css'));
   gulp.watch('./src/js/*', gulp.series('build:js', 'browserSync:reload'));
 });
 
@@ -216,4 +275,3 @@ gulp.task('browserSync:test', (done) => {
     }, 10000)
   });
 });
-

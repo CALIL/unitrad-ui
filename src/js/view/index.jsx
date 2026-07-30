@@ -71,7 +71,6 @@ type Props = {
   welcomeMessage: ?string,
   welcomeTitle: ?string,
   welcomeLinks: Array<UILink>,
-  onSearch: null | (query: UnitradQuery) => void,
   freewordPlaceholder: ?string,  //　フリーワードのプレースホルダー
   coverImage?: Function
 }
