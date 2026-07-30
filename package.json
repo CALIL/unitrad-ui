@@ -9,8 +9,7 @@
     "start": "gulp debug --conf=./conf/",
     "release": "gulp release",
     "test": "mocha --exit --require @babel/register \"test/test_*.js\"",
-    "test-with-browser": "gulp test",
-    "preinstall": "npx npm-force-resolutions"
+    "test-with-browser": "gulp test"
   },
   "directories": {
     "test": "test"
@@ -23,16 +22,16 @@
     "@babel/preset-react": "^7.29.7",
     "@babel/register": "^7.29.7",
     "@fomantic/gulp-header": "^2.2.0",
+    "@web/dev-server": "^1.0.0",
     "autoprefixer": "^10.5.4",
     "babel-eslint": "^10.1.0",
     "babelify": "^10.0.0",
-    "browser-sync": "^3.0.4",
     "browserify": "^17.0.1",
     "bundle-collapser": "^1.4.0",
     "chai": "^6.2.2",
     "cssnano": "^7.1.9",
-    "ejs": "^3.1.10",
-    "eslint": "^9.39.5",
+    "ejs": "^6.0.1",
+    "eslint": "^10.8.0",
     "eslint-plugin-flowtype": "^4.7.0",
     "flow-bin": "^0.279.0",
     "gulp": "^5.0.1",
@@ -87,8 +86,15 @@
       "browser": true
     }
   },
-  "resolutions": {
-    "glob-stream": "7.0.0"
+  "overrides": {
+    "gulp-ejs": {
+      "ejs": "^6.0.1"
+    },
+    "mocha": {
+      "serialize-javascript": "^7.0.7",
+      "diff": "^8.0.2"
+    },
+    "minimatch@^9.0.0": "^10.0.3"
   },
   "engines": {
     "node": ">=22"

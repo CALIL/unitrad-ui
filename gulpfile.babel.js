@@ -3,7 +3,7 @@ import fs from "fs";
 import gulp from "gulp";
 import autoprefixer from "autoprefixer";
 import postcss from "gulp-postcss";
-import browserSync from "browser-sync";
+import {startDevServer} from "@web/dev-server";
 import browserify from "browserify";
 import babelify from "babelify";
 import source from "vinyl-source-stream";
@@ -116,8 +116,7 @@ gulp.task('build:css', () => {
       this.emit('end');
     }))
     .pipe(process.env.NODE_ENV === 'production' ? postcss([_autoprefixer, cssnano]) : postcss([_autoprefixer]))
-    .pipe(gulp.dest(destDir))
-    .pipe(browserSync.stream());
+    .pipe(gulp.dest(destDir));
 });
 
 
@@ -191,26 +190,25 @@ gulp.task('build:html', gulp.series(gulp.parallel('copy:assets:local', 'copy:ass
 }));
 
 
-gulp.task('browserSync:reload', () => browserSync.reload());
-
-gulp.task('browserSync:init', () => {
-  browserSync.init({
-    server: {
-      baseDir: destDir,
-      index: 'index.html'
+gulp.task('devServer:init', async () => {
+  await startDevServer({
+    config: {
+      rootDir: destDir,
+      port: serverPort,
+      // 出力先(destDir)の更新を検知してブラウザを自動リロードする
+      watch: true,
+      clearTerminalOnReload: false,
+      open: false
     },
-    port: serverPort,
-    // UI用ポート(既定3001)もずらして、別worktreeのサーバーと衝突させない
-    ui: { port: serverPort + 1 },
-    notify: {
-      styles: [
-        'bottom: 0px'
-      ]
-    }
+    // gulpのコマンドライン引数(--conf等)を誤解釈させないため、CLI引数と設定ファイルは読まない
+    readCliArgs: false,
+    readFileConfig: false,
+    logStartMessage: true
   });
-  gulp.watch(['*.html', configDir + 'index.html'], gulp.task('browserSync:reload'));
+  /* ソースの変更で出力を作り直す。リロードは出力の変更を検知したdev serverが行う */
+  gulp.watch(['*.html', configDir + 'index.html'], gulp.task('build:html'));
   gulp.watch(['./src/sass/*.sass', configDir + '*.sass'], gulp.task('build:css'));
-  gulp.watch('./src/js/*', gulp.series('build:js', 'browserSync:reload'));
+  gulp.watch('./src/js/*', gulp.task('build:js'));
 });
 
 
@@ -224,7 +222,7 @@ gulp.task('debug', gulp.series(
     'build:html',
     'build:css',
     'build:js'),
-  gulp.parallel('browserSync:init')
+  gulp.parallel('devServer:init')
 ));
 
 gulp.task('release', gulp.series(
@@ -261,17 +259,19 @@ debug ... デバッグ用にビルドしてウェブサーバーを起動
 }));
 
 
-gulp.task('browserSync:test', (done) => {
-  browserSync.init({
-    server: {
-      baseDir: destDir,
-      index: 'index.html'
-    }
-  }, () => {
-    setTimeout(() => {
-      browserSync.exit();
-      done()
-      process.exit(0);
-    }, 10000)
+gulp.task('devServer:test', async () => {
+  const server = await startDevServer({
+    config: {
+      rootDir: destDir,
+      port: serverPort,
+      watch: false,
+      open: false
+    },
+    readCliArgs: false,
+    readFileConfig: false,
+    logStartMessage: true,
+    autoExitProcess: false
   });
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  await server.stop();
 });
