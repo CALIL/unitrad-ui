@@ -1,0 +1,65 @@
+# Dependabot 設定
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# これまで dependabot.yml が無く、Dependabot alerts 起点のセキュリティ更新しか
+# 動いていなかったため、バージョン更新も定期的に回すようにする。
+#
+# 方針: minor/patch はグループ化して 1 PR にまとめ、major は個別 PR で判断する。
+#       リリース直後の不具合や yank を踏まないよう cooldown で寝かせてから PR を出す。
+
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------------
+  # npm
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "chore(deps)"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+    groups:
+      npm-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ---------------------------------------------------------------------------
+  # Docker ベースイメージ
+  # タグベースのため semver 単位の cooldown (semver-major-days 等) は指定できない
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "build(deps)"
+    cooldown:
+      default-days: 7
+    groups:
+      container-images:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
