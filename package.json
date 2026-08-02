@@ -20,7 +20,7 @@
     "@babel/plugin-transform-flow-strip-types": "^7.29.7",
     "@babel/preset-env": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
-    "@babel/register": "^7.29.7",
+    "@babel/register": "^8.0.1",
     "@fomantic/gulp-header": "^2.2.0",
     "@web/dev-server": "^1.0.0",
     "autoprefixer": "^10.5.4",
