@@ -1,0 +1,49 @@
+name: CI
+
+# 依存を更新したときに壊れていないかを見るための最低限のチェック。
+# Dependabot の PR にもこれが走るので、更新して安全かどうかが分かる。
+#
+# 配布元: CALIL/workflows の templates/ci-npm.yml
+# 直すときは配布元を直して scripts/sync_checks.py で配ってください。
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+# 同じブランチで新しい push があったら、古い実行は止める
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ビルドとテスト
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          # .nvmrc / package.json の engines があればそれに従う。
+          # 無ければ LTS を使う。
+          node-version-file: ${{ hashFiles('.nvmrc') != '' && '.nvmrc' || 'package.json' }}
+          cache: npm
+
+      # package-lock.json どおりに入れる。lock がずれていればここで落ちる。
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
