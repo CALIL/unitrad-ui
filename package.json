@@ -33,7 +33,7 @@
     "ejs": "^6.0.1",
     "eslint": "^10.8.0",
     "eslint-plugin-flowtype": "^4.7.0",
-    "flow-bin": "^0.279.0",
+    "flow-bin": "^0.324.0",
     "gulp": "^5.0.1",
     "gulp-ejs": "^5.1.0",
     "gulp-postcss": "^10.0.0",
