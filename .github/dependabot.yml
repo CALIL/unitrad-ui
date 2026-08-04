@@ -29,6 +29,17 @@ updates:
     cooldown:
       default-days: 7
       semver-major-days: 30
+    ignore:
+      # react のメジャー更新は周辺ライブラリの対応状況をまとめて確認してから
+      # 手動で判断する。詳細は Todoist を参照
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-patch:
         patterns:
