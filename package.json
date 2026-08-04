@@ -29,7 +29,7 @@
     "browserify": "^17.0.1",
     "bundle-collapser": "^1.4.0",
     "chai": "^6.2.2",
-    "cssnano": "^7.1.9",
+    "cssnano": "^8.0.2",
     "ejs": "^6.0.1",
     "eslint": "^10.8.0",
     "eslint-plugin-flowtype": "^4.7.0",
