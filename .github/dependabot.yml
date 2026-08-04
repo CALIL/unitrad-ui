@@ -47,3 +47,31 @@ updates:
         update-types:
           - "minor"
           - "patch"
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions (.github/workflows)
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci(deps)"
+    # github-actions では semver-major-days は使えない。
+    # 指定すると設定ファイル全体が弾かれ、Dependabot がまったく動かなくなる。
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
