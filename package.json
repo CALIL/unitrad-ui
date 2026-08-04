@@ -32,7 +32,7 @@
     "cssnano": "^7.1.9",
     "ejs": "^6.0.1",
     "eslint": "^10.8.0",
-    "eslint-plugin-flowtype": "^4.7.0",
+    "eslint-plugin-flowtype": "^8.0.3",
     "flow-bin": "^0.324.0",
     "gulp": "^5.0.1",
     "gulp-ejs": "^5.1.0",
