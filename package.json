@@ -44,7 +44,7 @@
     "mocha": "^11.7.6",
     "postcss": "^8.5.25",
     "sass": "^1.102.0",
-    "through2": "^4.0.2",
+    "through2": "^5.0.5",
     "vinyl-buffer": "^1.0.1",
     "vinyl-source-stream": "^2.0.0"
   },
