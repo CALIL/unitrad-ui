@@ -44,6 +44,10 @@ jobs:
       - name: Install
         run: npm ci
 
+      # TypeScript化に伴うリポジトリ固有の追記。配布元のci-npm.ymlには無い。
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Test
         run: npm test
 

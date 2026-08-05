@@ -10,6 +10,9 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Index from 'view/index.jsx';
+import Index from './view/index';
 
-createRoot(document.getElementById('app')).render(<Index {...window.options ? window.options : {}} />);
+const container = document.getElementById('app');
+if (container) {
+  createRoot(container).render(<Index {...(window.options ? window.options : {})} />);
+}

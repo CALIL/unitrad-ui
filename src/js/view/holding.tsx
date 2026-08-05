@@ -1,4 +1,3 @@
-// @flow
 /*
 
  Unitrad UI Holding
@@ -12,13 +11,12 @@
 import React from 'react';
 
 export const DefaultHoldingView = (props: {
-  url: string,
-  label: string
+  url: string;
+  label: string;
 }) => (
   <a href={props.url}
-     tabIndex="0" target="_blank" rel="noopener"
+     tabIndex={0} target="_blank" rel="noopener"
      className={(props.label.length > 10 ? 'x3' : props.label.length > 5 ? 'x2' : '') + ' ' + (props.url ? '' : 'disabled')}>
     {props.label}
   </a>
 );
-

@@ -14,9 +14,11 @@ Reactで構築された蔵書検索のための汎用的なユーザーインタ
 ## ビルド
 
 ```bash
-npm update
-gulp release
+npm install
+npm run release
 ```
+
+開発用のビルド＆プレビューサーバーは `npm start`。
 
 ## ロードマップ
 
