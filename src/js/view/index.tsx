@@ -204,7 +204,7 @@ export default class Index extends React.Component<Props, State> {
   }
 
   onPressKey(word: string) {
-    /* 砺波こども用のためのコード */
+    /* ソフトキーボード連携用のコード */
     console.log("inside:" + word);
     let freeword = this.state.query.free || '';
     if (word === '[bs]') {
