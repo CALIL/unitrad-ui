@@ -15,8 +15,8 @@
    request.get(url).query({a: 1}).end((err, res) => { res.body })
    request.get(url).then((res) => res.body)
 
- esbuildのaliasで 'superagent' をこのモジュールへ向けているため、サイト設定は
- 書き換えていない。superagentとの差で気をつける点は3つ:
+ esbuildのaliasで 'superagent' をこのモジュールへ向けているため、2600件以上ある
+ サイト設定は書き換えていない。superagentとの差で気をつける点は3つ:
    - fetchは4xx/5xxでもresolveするので、okでなければerrにして返す
    - res.body はJSONのときだけパース結果を入れる（superagentと同じくそれ以外は空オブジェクト）
    - res.text は常に生の本文

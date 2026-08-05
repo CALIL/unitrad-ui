@@ -204,7 +204,7 @@ export function normalizeIsbn(isbn: string): string {
   if (!isbn) return '';
   const _tmp = isbn.replace(/[-]+/g, '');
   if (_tmp.length <= 10) {
-    return "   " + _tmp;
+    return "\u2002\u2002\u2002" + _tmp;
   }
   return _tmp;
 }
