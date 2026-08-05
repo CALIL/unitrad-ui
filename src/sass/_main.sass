@@ -1,12 +1,6 @@
 @charset "utf-8"
-@use "sass:math"
-
-// CSSフレームワークに対応するために演算済みのremを出力する
-@function rem($value)
-    @if $standard-rem == false
-        @return $value * 1rem
-    @else
-        @return math.div(ceil($value * 0.625 * 100) , 100) * 1rem
+@use 'default' as *
+@use 'functions' as *
 
 *
     box-sizing: border-box

@@ -1,3 +1,8 @@
 // テーマCSSのカスタマイズ (SASS形式)
+//
+// _default.sass の値を上書きする。@use では他のモジュールの変数を
+// default.$name: value の形で書き換える。app.sass が default -> config -> main... の
+// 順に @use しているので、上書きは main 以降の評価に反映される。
+@use 'default'
 
-$themeColor: #689B8C
+default.$themeColor: #689B8C
