@@ -1,0 +1,18 @@
+@charset "utf-8"
+@use "sass:math"
+@use 'default' as *
+
+// _main.sass にあった rem()。
+// @import なら暗黙で全体から見えていたが、@use では読み込んだ側からしか見えない。
+// _main / _top / _side / _result / _bottom から使うのでここへ分けた。
+// CSS を出さないモジュールなので、@use する位置は出力順に影響しない。
+//
+// $standard-rem は呼び出し時に評価されるため、conf 側の config.sass が
+// 上書きした値がそのまま効く。
+
+// CSSフレームワークに対応するために演算済みのremを出力する
+@function rem($value)
+    @if $standard-rem == false
+        @return $value * 1rem
+    @else
+        @return math.div(math.ceil($value * 0.625 * 100), 100) * 1rem
