@@ -1,4 +1,3 @@
-// @flow
 /*
 
  Unitrad UI ソート関連
@@ -9,9 +8,11 @@
 
  */
 
-function _exclude(holdings: ?Array<number>, excludes: Array<number>) {
+type NameToId = { [key: string]: Array<number> };
+
+function _exclude(holdings: Array<number> | null | undefined, excludes: Array<number>) {
   excludes.forEach((libid) => {
-    let i = holdings ? holdings.indexOf(libid) : -1;
+    const i = holdings ? holdings.indexOf(libid) : -1;
     if (i !== -1 && holdings) holdings.splice(i, 1);
   });
 }
@@ -22,7 +23,7 @@ function _exclude(holdings: ?Array<number>, excludes: Array<number>) {
  * @param books 検索結果リスト
  * @param excludes 除外図書館IDのリスト
  */
-export function processExcludes(books: ?Array<UnitradBook>, excludes: Array<number>): void {
+export function processExcludes(books: Array<UnitradBook> | null | undefined, excludes: Array<number>): void {
   if (books) {
     books.forEach((book) => {
       _exclude(book.holdings, excludes);
@@ -47,12 +48,12 @@ export function applyIncludes(books: Array<UnitradBook>, includes: Array<number>
 }
 
 
-export function filterRemains(remains: Array<string>, includes: Array<number>, name_to_id: {}): Array<string> {
+export function filterRemains(remains: Array<string>, includes: Array<number>, name_to_id: NameToId): Array<string> {
   if (includes.length === 0 || remains.length === 0 || !name_to_id) return remains;
-  let tmp = [];
+  const tmp: Array<string> = [];
   remains.forEach((name) => {
     if (name_to_id[name]) {
-      let hit = name_to_id[name].some((id) => {
+      const hit = name_to_id[name].some((id) => {
         return (includes.indexOf(id) !== -1)
       });
       if (hit) tmp.push(name);
@@ -67,11 +68,11 @@ export function filterRemains(remains: Array<string>, includes: Array<number>, n
  * @param data
  * @param name_to_id
  */
-export function unresolvedHoldings(data: UnitradResult, name_to_id: { [string]: Array<number> }): Array<number> {
-  let unresolved = [];
-  let remains = data.remains.concat(data.errors);
+export function unresolvedHoldings(data: UnitradResult, name_to_id: NameToId): Array<number> {
+  const unresolved: Array<number> = [];
+  const remains = data.remains.concat(data.errors);
   remains.forEach((name) => {
-    if (name_to_id.hasOwnProperty(name)) {
+    if (Object.prototype.hasOwnProperty.call(name_to_id, name)) {
       name_to_id[name].forEach((id) => {
         if (unresolved.indexOf(id) === -1) {
           unresolved.push(id);
@@ -91,7 +92,7 @@ export function unresolvedHoldings(data: UnitradResult, name_to_id: { [string]: 
 export function countHoldings(holdings: Array<number>, includes: Array<number>): number {
   if (includes.length === 0) return holdings.length;
   let count = 0;
-  let vi = [...new Set(includes)]; // フィルターに重複がある場合に対応（重複しないことが保証されればこのコードは不要）
+  const vi = [...new Set(includes)]; // フィルターに重複がある場合に対応（重複しないことが保証されればこのコードは不要）
   vi.forEach((id) => {
     if (holdings.indexOf(id) !== -1) count++;
   });
@@ -118,7 +119,7 @@ export function holdingsFromBook(book: UnitradBook, includes: Array<number>): nu
  * @param b {Array} 所蔵リスト
  * @returns {Array}
  */
-export function intersectHoldings(a: Array<number>, b: Array<number>) {
+export function intersectHoldings(a: Array<number>, b: Array<number>): Array<number> {
   if (!a || !b) return [];
   return a.filter(x => b.indexOf(x) !== -1);
 }
@@ -151,7 +152,7 @@ function titleSorter(a: UnitradBook, b: UnitradBook): number {
  * @returns {Number}
  */
 function authorSorter(a: UnitradBook, b: UnitradBook): number {
-  let _x = _stringSorter(a.author, b.author);
+  const _x = _stringSorter(a.author, b.author);
   return (_x === 0) ? titleSorter(a, b) : _x;
 }
 
@@ -162,7 +163,7 @@ function authorSorter(a: UnitradBook, b: UnitradBook): number {
  * @returns {Number}
  */
 function publisherSorter(a: UnitradBook, b: UnitradBook): number {
-  let _x = _stringSorter(a.publisher, b.publisher);
+  const _x = _stringSorter(a.publisher, b.publisher);
   return (_x === 0) ? titleSorter(a, b) : _x;
 }
 
@@ -201,9 +202,9 @@ function pubdateSorter(a: UnitradBook, b: UnitradBook): number {
  */
 export function normalizeIsbn(isbn: string): string {
   if (!isbn) return '';
-  let _tmp = isbn.replace(/[-]+/g, '');
+  const _tmp = isbn.replace(/[-]+/g, '');
   if (_tmp.length <= 10) {
-    return "\u2002\u2002\u2002" + _tmp;
+    return "   " + _tmp;
   }
   return _tmp;
 }
@@ -216,9 +217,9 @@ export function normalizeIsbn(isbn: string): string {
  * @param {String || Number} p
  * @returns {Number}
  */
-export function normalizePubdate(p: string): number {
-  let _p = String(p).replace(/元年/g, "1年");
-  let _tmp = _p.match(/\d+/g);
+export function normalizePubdate(p: string | number): number {
+  const _p = String(p).replace(/元年/g, "1年");
+  const _tmp = _p.match(/\d+/g);
   if (_tmp) {
     if (_tmp.length === 1 && _tmp[0].length > 4) {
       return parseInt((_tmp[0] + '00000000').slice(0, 8), 10);
@@ -257,9 +258,9 @@ export function normalizePubdate(p: string): number {
  * @param reverse {Boolean} 逆順フラグ
  * @param includes
  */
-export function applySort(books: Array<UnitradBook>, column: string, reverse: boolean, includes: Array<number>) {
+export function applySort(books: Array<UnitradBook>, column: string, reverse: boolean, includes: Array<number>): Array<UnitradBook> {
   if (!books || column === '') return books;
-  let _books = books.concat();
+  const _books = books.concat();
   switch (column) {
     case 'title':
       _books.sort(titleSorter);
@@ -296,7 +297,7 @@ export function applySort(books: Array<UnitradBook>, column: string, reverse: bo
         }
       });
       _books.sort((a, b) => {
-        let x = a._holdings - b._holdings;
+        const x = a._holdings - b._holdings;
         if (x === 0 && a._holdings === 1) {
           return b._holding_key - a._holding_key;
         } else {

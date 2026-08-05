@@ -1,4 +1,3 @@
-// @flow
 /*
 
  Unitrad UI 検索結果
@@ -10,20 +9,29 @@
  */
 
 import React from 'react';
-import ReactPaginate from 'react-paginate';
+import ReactPaginateModule from 'react-paginate';
+
+/*
+ react-paginateはCommonJSで module.exports = {__esModule: true, default: Component}
+ を返す。esbuildは __toESM(..., 1) でラップし、__esModule を見ずにmodule.exports全体を
+ defaultへ入れるため、そのまま使うとコンポーネントではなくオブジェクトが渡り
+ 「Element type is invalid ... got: object」になる。browserifyはrequireをそのまま
+ 扱っていたので起きなかった。
+ */
+const ReactPaginate: any = (ReactPaginateModule as any)?.default ?? ReactPaginateModule;
 import {
   api,
   normalizeQuery,
   isEqualQuery,
   isEmptyQuery,
-} from '../api.js'
-import {processExcludes, applyIncludes, applySort, filterRemains} from '../sort.js'
-import Book from './book.jsx';
+} from '../api'
+import {processExcludes, applyIncludes, applySort, filterRemains} from '../sort'
+import Book from './book';
 
 
 type State = {
-  result: ?UnitradResult,
-  selected_id: ?string,
+  result: UnitradResult | null | undefined,
+  selected_id: string | null | undefined,
   sort_column: string,
   sort_order: '' | 'descend' | 'ascend',
   sort_class: Array<string>,
@@ -36,25 +44,28 @@ type Props = {
   filter: number,
   filters: Array<UIFilter>,
   excludes: Array<number>,
-  selected_id: ?string,
+  selected_id: string | null | undefined,
   query: UnitradQuery,
   region: string,
   includes: Array<number>,
-  mapping: { [string]: Object },
-  lazyHidden: ?Array<string>,
+  mapping: { [key: string]: UnitradMapping },
+  lazyHidden: Array<string> | null | undefined,
   externalLinks: Array<UIExternal>,
-  holdingLinkReplacer: ?Function,
-  holdingOrder: ?Array<number>,
+  holdingLinkReplacer: Function | null | undefined,
+  holdingOrder: Array<number> | null | undefined,
   rows: number,
-  customHoldingView: ?Function,
-  customDetailView: ?Function,
-  customNotFoundView: ?Function,
+  customHoldingView: React.ComponentType<any> | null | undefined,
+  customDetailView: React.ComponentType<any> | null | undefined,
+  customNotFoundView: React.ComponentType<any> | null | undefined,
   changeFilter: Function,
   hideSide: boolean,
   showLogo: boolean,
-  filterMessage: ?string,
-  filterTitle: ?string,
-  is_multiple_region: boolean
+  filterMessage: string | null | undefined,
+  filterTitle: string | null | undefined,
+  is_multiple_region: boolean,
+  showFooter?: boolean,
+  linkLogo?: boolean,
+  coverImage?: React.ComponentType<any>
 };
 
 
@@ -63,7 +74,7 @@ export default class Results extends React.Component<Props, State> {
   _query: UnitradQuery;
   api: api;
   started: number;
-  ariaTime: ?number;
+  ariaTime: number | null | undefined;
 
   constructor(props: Props) {
     super(props);
@@ -88,7 +99,7 @@ export default class Results extends React.Component<Props, State> {
       if (this.api) this.api.kill();
       this._query = normalizeQuery(this.props.query);
       this._query.region = this.props.region;
-      this.started = new Date();
+      this.started = Date.now();
       if (!isEmptyQuery(this._query)) {
         this.api = new api(this._query, this.doUpdate.bind(this));
       } else {
@@ -112,9 +123,9 @@ export default class Results extends React.Component<Props, State> {
     if (this.api) this.api.kill();
   }
 
-  onSelectBook(e: SyntheticInputEvent<>) {
+  onSelectBook(e: React.ChangeEvent<HTMLInputElement>) {
     if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
-    let current: ?Element = e.target;
+    let current: Element | null | undefined = e.target;
     while (current && current.parentNode) {
       if (current.attributes.getNamedItem('data-id')) {
         let hash = current.attributes.getNamedItem('data-id').value;
@@ -137,7 +148,7 @@ export default class Results extends React.Component<Props, State> {
         location.hash = '';
       }
     }
-    this.state.selected_id = null;
+    (this.state as any).selected_id = null;
   }
 
   onClose() {
@@ -150,7 +161,7 @@ export default class Results extends React.Component<Props, State> {
     this.setState({page: data.selected, selected_id: null});
   }
 
-  onSort(e: SyntheticInputEvent<>) {
+  onSort(e: React.ChangeEvent<HTMLInputElement>) {
     this.removeHash();
     let target: null | Element & HTMLElement = e.target;
     while (target && !target.className.match('sort')) {
@@ -183,11 +194,11 @@ export default class Results extends React.Component<Props, State> {
     this.setState({page: 0, sort_column: column, sort_order: nextOrder, sort_class: names});
   }
 
-  onSortKeyUp(e: SyntheticInputEvent<>) {
-    e = e || window.event;
+  onSortKeyUp(e: React.KeyboardEvent) {
+    e = e || (window.event as any);
     if (e.keyCode === 13) {
       e.stopPropagation();
-      this.onSort(e);
+      this.onSort(e as any);
     }
   }
 
@@ -222,11 +233,11 @@ export default class Results extends React.Component<Props, State> {
 
       if (this.state.result) {
         if (this.state.result.running && _remains.length > 0) {
-          if (this.started && new Date() - this.started < 1500 && _books.length === 0) {
+          if (this.started && Date.now() - this.started < 1500 && _books.length === 0) {
             message = 'さがしています。';
           } else {
             message = String(_books.length) + "件見つかりました。";
-            if (_remains.length < 5 && (this.started && new Date() - this.started > 5000)) {
+            if (_remains.length < 5 && (this.started && Date.now() - this.started > 5000)) {
               message += _remains.join(',') + "は時間がかかっています。";
             } else {
               message += "あと " + _remains.length + "館。"
@@ -260,9 +271,9 @@ export default class Results extends React.Component<Props, State> {
       }
     }
     let messageAria = '';
-    if (this.ariaTime && new Date() - this.ariaTime < 5000) {
+    if (this.ariaTime && Date.now() - this.ariaTime < 5000) {
     } else {
-      this.ariaTime = new Date();
+      this.ariaTime = Date.now();
       messageAria = message;
       message = '';
     }
@@ -330,8 +341,8 @@ export default class Results extends React.Component<Props, State> {
                      role="columnheader"
                      className={header.id + ' sort'}
                      data-sort-column={header.id}
-                     tabIndex="0"
-                     aria-sort={(this.state.sort_column === header.id && this.state.sort_order !== '') ? this.state.sort_order + 'ing' : 'none'}
+                     tabIndex={0}
+                     aria-sort={((this.state.sort_column === header.id && this.state.sort_order !== '') ? this.state.sort_order + 'ing' : 'none') as any}
                      onKeyUp={this.onSortKeyUp.bind(this)}
                      onClick={this.onSort.bind(this)}>
                     {header.label}
@@ -447,7 +458,7 @@ export default class Results extends React.Component<Props, State> {
                     if (this.props.linkLogo && isEmptyQuery(this.state.established_query)) {
                       return (
                         <div className="sidelogo">
-                          <a href="https://calil.jp/" target="_blank" tabIndex="-1"
+                          <a href="https://calil.jp/" target="_blank" tabIndex={-1}
                              aria-label="カーリルのウェブサイトにリンク">
                             <span className="poweredby"/>
                           </a>

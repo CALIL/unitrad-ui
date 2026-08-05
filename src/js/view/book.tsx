@@ -1,4 +1,3 @@
-// @flow
 /*
 
  Unitrad UI Book
@@ -10,13 +9,14 @@
  */
 
 import React from 'react';
-import {api} from '../api.js'
-import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort.js'
+import {api} from '../api'
+import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort'
 
 type State = {
-  uuid: ?string,
-  book_deep: ?UnitradBook,
-  unresolvedHoldings: Array<number>
+  uuid: string | null | undefined,
+  book_deep: UnitradBook | null | undefined,
+  unresolvedHoldings: Array<number>,
+  remains?: Array<string> | null
 };
 
 type Props = {
@@ -29,18 +29,22 @@ type Props = {
   region: string,
   onSelect: Function,
   onClose: Function,
-  name_to_id: { [string]: Array<number> },
-  libraries: { [number]: string },
-  holdingOrder: ?Array<number>,
-  customHoldingView: ?Function,
-  holdingLinkReplacer: ?Function,
-  remains: ?Array<string>
+  name_to_id: { [key: string]: Array<number> },
+  libraries: { [key: number]: string },
+  holdingOrder: Array<number> | null | undefined,
+  customHoldingView: React.ComponentType<any> | null | undefined,
+  customDetailView?: React.ComponentType<any> | null,
+  coverImage?: React.ComponentType<any>,
+  isbnAdvanced?: boolean,
+  holdingLinkReplacer: Function | null | undefined,
+  remains: Array<string> | null | undefined
 }
 
 export default class Book extends React.Component<Props, State> {
   static defaultProps: Props;
   api: api;
-  state = {
+  deep_requested: boolean = false;
+  state: State = {
     uuid: null,
     book_deep: null,
     unresolvedHoldings: []
@@ -76,7 +80,7 @@ export default class Book extends React.Component<Props, State> {
         }
         book_deep.holdings = [...book_deep.holdings, ...book.holdings];
         for (let id in book.url) {
-          if (book.url.hasOwnProperty(id)) {
+          if (Object.prototype.hasOwnProperty.call(book.url, id)) {
             if (!book_deep.url.hasOwnProperty(id)) {
               book_deep.url[id] = book.url[id];
               book_deep.bid[id] = book.id;
@@ -96,8 +100,8 @@ export default class Book extends React.Component<Props, State> {
     });
   }
 
-  onKeyUp(e: SyntheticEvent<>) {
-    e = e || window.event;
+  onKeyUp(e: React.KeyboardEvent) {
+    e = e || (window.event as any);
     if (e.keyCode === 13) {
       e.stopPropagation();
       this.props.onSelect(e);
@@ -125,7 +129,7 @@ export default class Book extends React.Component<Props, State> {
     let hcount = countHoldings(virtual_holdings, this.props.includes);
 
     return (
-      <div tabIndex="0" className={'row book ' + (this.props.opened ? 'opened' : '')}
+      <div tabIndex={0} className={'row book ' + (this.props.opened ? 'opened' : '')}
            role="row"
            aria-expanded={this.props.opened}
            aria-rowindex={this.props.index}
@@ -156,7 +160,7 @@ export default class Book extends React.Component<Props, State> {
         <div className={'isbn' + (this.props.book.isbn !== '' && this.props.book.isbn !== null ? ' exist' : '')}
              role="gridcell">
           {(() => {
-            if (this.props.isbnAdvanced && this.props.book._isbn.length >= 10 && (this.props.book._isbn.slice(0, 3) === '978' || this.props.book._isbn.slice(0, 3) === "\u2002\u2002\u2002")) {
+            if (this.props.isbnAdvanced && this.props.book._isbn.length >= 10 && (this.props.book._isbn.slice(0, 3) === '978' || this.props.book._isbn.slice(0, 3) === "   ")) {
               let block1 = this.props.book._isbn.slice(0, 3);
               let block2 = this.props.book._isbn.slice(3, 4);
               let block3 = this.props.book._isbn.slice(4);
@@ -189,7 +193,7 @@ export default class Book extends React.Component<Props, State> {
         <div className="holdings" role="gridcell">
           {(() => {
             if (this.props.opened) {
-              return (<button role="button" aria-label="閉じる" tabIndex="0" className="close"
+              return (<button role="button" aria-label="閉じる" tabIndex={0} className="close"
                               onClick={this.props.onClose.bind(this)}>&times;</button>)
             } else {
               if (hcount === 1) {
@@ -232,7 +236,6 @@ export default class Book extends React.Component<Props, State> {
             } else {
               virtual_holdings.sort(); // holdingOrderがない場合はID順とする
             }
-
             return (
               <div className="detail">
                 <div className="count">
@@ -276,10 +279,11 @@ export default class Book extends React.Component<Props, State> {
                         bid = this.props.book.id;
                       } else if (this.state.book_deep && this.state.book_deep.url[holding]) {
                         url = this.state.book_deep.url[holding];
-                        bid = this.state.book_deep.bid[holding];
                         uuid = this.state.uuid;
+                        bid = this.state.book_deep.bid[holding];
                       }
                       if (url && this.props.holdingLinkReplacer) url = this.props.holdingLinkReplacer(url);
+
                       return (
                         <this.props.customHoldingView url={url}
                                                       key={holding}
