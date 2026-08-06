@@ -1,0 +1,77 @@
+name: Actionsのセキュリティチェック
+
+# ワークフロー自体に潜むセキュリティ上の問題を zizmor で検査します。
+# 対象は .github/ 配下の変更があったときだけです。
+#
+# 落ちたときの読み方（よく出るもの）:
+#   unpinned-uses         サードパーティの uses: をタグでなくコミットSHAで指定してください
+#                         例) foo/bar@v1 → foo/bar@<40桁SHA> # v1
+#   artipacked            actions/checkout に persist-credentials: false を足してください
+#                         （checkout は既定で書き込み権限つきトークンを .git に残すため）
+#   excessive-permissions permissions: を必要最小限に絞ってください
+#   template-injection    テンプレート式を run: に直接書かず、env: 経由で渡してください
+#
+# 個別に許容したい指摘がある場合は、その行に次のコメントを付けられます:
+#   # zizmor: ignore[ルール名]
+#
+# 詳細な説明: https://docs.zizmor.sh/audits/
+
+# 注意: このファイルの中に、テンプレート式の記法をリテラルで書かないこと。
+# 解説目的でも Actions がそれを式として評価しようとし、ワークフロー全体が
+# 起動できなくなる（ジョブが1つも作られず failure になる）。
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - '.github/**'
+  pull_request:
+    paths:
+      - '.github/**'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  zizmor:
+    name: zizmor による静的解析
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run zizmor
+        id: zizmor
+        uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
+        with:
+          inputs: .github/workflows/
+          # SARIF (advanced-security) は finding があっても失敗しないためゲートにならない。
+          # annotations は zizmor の終了コードをそのまま返すのでゲートとして機能する
+          advanced-security: false
+          annotations: true
+          min-severity: low
+
+      - name: 失敗したときの案内
+        if: failure()
+        run: |
+          {
+            echo "## Actionsのセキュリティチェックで指摘が出ました"
+            echo ""
+            echo "上の **Annotations** に、該当する行と理由が出ています。"
+            echo ""
+            echo "| ルール | 直し方 |"
+            echo "|---|---|"
+            echo "| \`unpinned-uses\` | サードパーティの \`uses:\` をコミットSHAで指定する（例: \`foo/bar@<SHA> # v1\`）|"
+            echo "| \`artipacked\` | \`actions/checkout\` に \`persist-credentials: false\` を足す |"
+            echo "| \`excessive-permissions\` | \`permissions:\` を必要な範囲まで絞る |"
+            echo "| \`template-injection\` | テンプレート式を \`run:\` に直書きせず \`env:\` 経由で渡す |"
+            echo ""
+            echo "意図的にその書き方をしている場合は、該当行に \`# zizmor: ignore[ルール名]\` を付けると除外できます。"
+            echo ""
+            echo "ルールの詳しい説明: https://docs.zizmor.sh/audits/"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,28 @@
+# Actionsのセキュリティチェック(zizmor)の設定
+#
+# unpinned-uses: uses: の書き方をどこまで厳しくするか
+#
+#   GitHub 公式(actions/*)と自社(CALIL/*)は、タグやブランチでの指定を許容します。
+#   これらの参照先を差し替えられるのは GitHub 自身か自社だけで、
+#   第三者が公開するアクションとはリスクの質が違うためです。
+#
+#   それ以外はすべてコミットSHAでの固定を必須にします。第三者のアクションは
+#   タグを後から別のコミットに付け替えられるため、タグ指定だと
+#   「レビューしたコードとは違うものが動く」ことが起こりえます。
+#
+#   第三者のアクションを追加するときの書き方:
+#     - uses: foo/bar@0123456789abcdef0123456789abcdef01234567 # v1.2.3
+#   SHA はタグのページか `gh api repos/foo/bar/commits/v1.2.3 --jq .sha` で取れます。
+#   Dependabot はこの形式を認識し、更新時に SHA とコメントの両方を書き換えます。
+#
+# 個別に許容したい指摘は、ワークフロー側の該当行に次のコメントを付けて除外します:
+#   # zizmor: ignore[ルール名]
+#
+# 設定の詳細: https://docs.zizmor.sh/configuration/
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "actions/*": ref-pin
+        "CALIL/*": ref-pin
+        "*": hash-pin
