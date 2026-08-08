@@ -3,28 +3,45 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 
 const require = createRequire(import.meta.url);
-const nameToUrl = require('oss-license-name-to-url');
+const spdxLicenseList = require('spdx-license-list');
 
 /*
  バンドルに含まれた依存ライブラリのライセンス一覧をヘッダとして出力する。
- licensify（browserifyプラグイン）のextract / createEachHeaderの仕様に合わせてあり、
- URL付与も同じ oss-license-name-to-url を使う。
+ licensify（browserifyプラグイン）のextract / createEachHeaderの仕様に合わせてある。
 
- 収集対象だけがlicensifyと異なる:
+ licensifyと異なる点が2つある。
+
+ ひとつは収集対象:
    licensify … 依存グラフを歩く途中で見つけたpackage.json全部。Node互換shim（process /
      timers-browserify / browser-resolve）や、最終出力に残らないreact-dom開発版も含む
    こちら   … metafileのinputsに実際に入ったファイルの所属パッケージのみ
  実際に配布されるコードのライセンスを列挙する点でこちらが正確。
+
+ もうひとつはURLの引き方。licensifyが使うoss-license-name-to-urlは2015年で更新が
+ 止まっており、0BSD / MIT-0 / BlueOak-1.0.0 のようにその後SPDXへ登録された識別子を
+ 解決できずURLなしになる。こちらはSPDXの一覧をそのまま引く。
  */
 
 const PROPS = ['license', 'licenses', 'author', 'maintainers', 'contributors', 'homepage', 'version'];
 const OPERATORS = ['OR', 'AND'];
 
+/* SPDXの識別子は大文字小文字を区別せずに照合する決まりなので、小文字で引けるようにする */
+const spdxIds = new Map(Object.keys(spdxLicenseList).map((id) => [id.toLowerCase(), id]));
+
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/*
+ spdx-license-listが持つurlはライセンスごとに提供元がばらつく（ISCはisc.orgの一覧ページ、
+ 0BSDは個人サイト）ため、識別子の確認だけに使い、URLはSPDXの公式ページへ揃える。
+ */
+function licenseUrl(name) {
+  const id = spdxIds.get(name.toLowerCase());
+  return id ? `https://spdx.org/licenses/${id}.html` : null;
+}
 
 function appendUrlToLicense(name) {
   if (!name) return name;
-  const url = nameToUrl(name);
+  const url = licenseUrl(name);
   return url ? `${name} (${url})` : name;
 }
 

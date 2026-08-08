@@ -23,9 +23,9 @@
     "esbuild": "^0.28.1",
     "jsdom": "^30.0.1",
     "minimist": "^1.2.8",
-    "oss-license-name-to-url": "^1.2.1",
     "postcss": "^8.5.25",
     "sass-embedded": "^1.100.0",
+    "spdx-license-list": "^6.12.0",
     "typescript": "^7.0.2"
   },
   "repository": {
