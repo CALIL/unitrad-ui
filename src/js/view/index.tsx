@@ -9,7 +9,6 @@
  */
 
 import React from 'react';
-import {findDOMNode} from 'react-dom';
 import Results from './result'
 import {DefaultHoldingView} from './holding'
 import {normalizeQuery, isEmptyQuery, fetchMapping} from '../api'
@@ -100,6 +99,13 @@ export default class Index extends React.Component<Props, State> {
 
   requestUpdateURL: null | 'search' | 'filter';
   resizeTimer: number | null | undefined;
+  boxRef = React.createRef<HTMLDivElement>();
+  freewordRef = React.createRef<HTMLInputElement>();
+  resultsRef = React.createRef<Results>();
+  /* removeEventListenerに同じ参照を渡すため、リスナーはここで束縛して持つ */
+  boundOnPopState = (e: PopStateEvent) => this.onPopState(e);
+  boundOnScroll = () => this.onScroll();
+  boundOnPressKey = (word: string) => this.onPressKey(word);
 
   constructor(props: Props) {
     super(props);
@@ -135,12 +141,12 @@ export default class Index extends React.Component<Props, State> {
   }
 
   componentDidMount() {
-    window.pressKey = this.onPressKey.bind(this);
+    window.pressKey = this.boundOnPressKey;
     if (typeof history !== 'undefined' && history.pushState && history.state !== undefined) {
-      window.addEventListener('popstate', (e) => this.onPopState(e));
+      window.addEventListener('popstate', this.boundOnPopState);
     }
-    window.addEventListener("scroll", this.onScroll.bind(this));
-    window.addEventListener("resize", this.onScroll.bind(this));
+    window.addEventListener("scroll", this.boundOnScroll);
+    window.addEventListener("resize", this.boundOnScroll);
     if (!(this.props.region in this.state.mapping) || Object.keys(this.state.mapping[this.props.region].libraries).length === 0) {
       fetchMapping(this.props.region, (res) => {
         this.state.mapping[this.props.region] = res;
@@ -150,15 +156,18 @@ export default class Index extends React.Component<Props, State> {
   }
 
   componentWillUnmount() {
-    window.removeEventListener("scroll", this.onScroll);
-    window.removeEventListener("resize", this.onScroll);
+    window.removeEventListener('popstate', this.boundOnPopState);
+    window.removeEventListener("scroll", this.boundOnScroll);
+    window.removeEventListener("resize", this.boundOnScroll);
+    if (this.resizeTimer) clearTimeout(this.resizeTimer);
+    if (window.pressKey === this.boundOnPressKey) delete window.pressKey;
   }
 
   onScroll(e?: Event | React.SyntheticEvent) {
     if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.resizeTimer = window.setTimeout(() => {
-      let element = findDOMNode(this.refs.box);
-      if (element && element instanceof HTMLElement) {
+      let element = this.boxRef.current;
+      if (element) {
         let rect = element.getBoundingClientRect();
         let windowHeight: number = (window.innerHeight || 0);
         this.setState({logoAvailable: windowHeight - 50 > rect.top + rect.height})
@@ -177,7 +186,8 @@ export default class Index extends React.Component<Props, State> {
       query: normalizeQuery(params),
       established_query: normalizeQuery(params)
     });
-    (this.refs.results as any).setState({selected_id: getHash(), page: 0, sort_key: null, sort_order: ''});
+    /* sort_column: 従来はタイポでsort_keyを渡していて、ソート列がリセットされていなかった */
+    this.resultsRef.current?.setState({selected_id: getHash(), page: 0, sort_column: '', sort_order: ''});
   }
 
   doSearch(e: React.SyntheticEvent) {
@@ -197,7 +207,7 @@ export default class Index extends React.Component<Props, State> {
         isbn: this.state.query.isbn ? this.state.query.isbn : ''
       };
     }
-    (this.refs.results as any).setState({selected_id: null, page: 0, sort_column: null, sort_order: ''});
+    this.resultsRef.current?.setState({selected_id: null, page: 0, sort_column: '', sort_order: ''});
     this.setState({established_query: normalizeQuery(query)});
     let onSearch = this.props.onSearch || null;
     if (onSearch) onSearch(normalizeQuery(query));
@@ -212,7 +222,7 @@ export default class Index extends React.Component<Props, State> {
     } else if (word === '[search]') {
       let query: UnitradQuery;
       query = {free: this.state.query.free ? this.state.query.free : ''};
-      (this.refs.results as any).setState({selected_id: null, page: 0, sort_column: null, sort_order: ''});
+      this.resultsRef.current?.setState({selected_id: null, page: 0, sort_column: '', sort_order: ''});
       this.setState({established_query: normalizeQuery(query)});
       let onSearch = this.props.onSearch || null;
       if (onSearch) onSearch(normalizeQuery(query));
@@ -225,7 +235,8 @@ export default class Index extends React.Component<Props, State> {
     freeword = window.jaco!.remove(freeword, /゜|゚|ﾟ/g);
     this.state.query.free = freeword;
     this.setState({});
-    const elm = findDOMNode(this.refs.freeword) as any;
+    const elm = this.freewordRef.current as any;
+    if (!elm) return;
     elm.focus();
     if (elm.createTextRange) {
       var range = elm.createTextRange();
@@ -283,7 +294,7 @@ export default class Index extends React.Component<Props, State> {
     } else {
       this.setState(newState as any);
     }
-    (this.refs.results as any).setState({page: 0});
+    this.resultsRef.current?.setState({page: 0});
   }
 
   changeCustom(e: React.ChangeEvent<HTMLInputElement>) {
@@ -315,7 +326,7 @@ export default class Index extends React.Component<Props, State> {
       if (history.pushState && history.state !== undefined) {
         let query_string = buildQueryString(this.state.established_query, this.state.mode, this.state.filter);
         if ('?' + location.search.split('?')[1] !== query_string) {
-          let hash = ((this.refs.results as any).state.selected_id && this.requestUpdateURL === 'filter') ? '#' + (this.refs.results as any).state.selected_id : '';
+          let hash = (this.resultsRef.current?.state.selected_id && this.requestUpdateURL === 'filter') ? '#' + this.resultsRef.current.state.selected_id : '';
           history.pushState('search', '', location.pathname + query_string + hash);
         }
       }
@@ -325,12 +336,12 @@ export default class Index extends React.Component<Props, State> {
     let form;
     if (this.state.mode === 'simple') {
       form = (
-        <div className="container" ref="box">
+        <div className="container" ref={this.boxRef}>
           <div className="box">
             <input type="search"
                    id="free"
                    autoFocus
-                   ref="freeword"
+                   ref={this.freewordRef}
                    aria-labelledby="searchButton"
                    value={this.state.query.free} onChange={this.updateHandler.bind(this)}
                    placeholder={this.props.freewordPlaceholder ? this.props.freewordPlaceholder : "フリーワード"}/>
@@ -350,7 +361,7 @@ export default class Index extends React.Component<Props, State> {
         }
       };
       form = (
-        <div className="container" ref="box">
+        <div className="container" ref={this.boxRef}>
           <div className="items">
             <div>
               <label htmlFor="title">タイトル</label>
@@ -426,7 +437,7 @@ export default class Index extends React.Component<Props, State> {
             );
           }
         })()}
-        <Results ref="results"
+        <Results ref={this.resultsRef}
                  region={this.state.region}
                  mapping={this.state.mapping}
                  is_multiple_region={this.state.is_multiple_region}

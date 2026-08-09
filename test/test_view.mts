@@ -17,6 +17,8 @@ const g = globalThis as any;
 g.window = dom.window;
 g.document = dom.window.document;
 g.location = dom.window.location;
+/* Index の componentDidMount が popstate リスナーを登録する条件に history を見る */
+g.history = dom.window.history;
 /* navigator はNode 21以降 読み取り専用なので触らない。renderToStringでは使われない */
 g.HTMLElement = dom.window.HTMLElement;
 g.Element = dom.window.Element;
@@ -164,6 +166,93 @@ describe('Index（検索ボックス）', () => {
     const out = html(React.createElement(Index, {...base, mode: 'simple'} as any));
     assert.match(out, /class="emtop advanced"/);
     setSearch('');
+  });
+});
+
+describe('Index（クライアント描画とライフサイクル）', () => {
+  /* libraries を渡しておくと componentDidMount の fetchMapping が通信を起こさない */
+  const base = {
+    region: 'test', mode: 'simple',
+    filters: [{id: 0, name: '全域', includes: []}],
+    libraries: {1: 'A図書館'}, name_to_id: {'A図書館': [1]}
+  };
+
+  before(() => setSearch(''));
+
+  function mountIndex() {
+    const container = dom.window.document.createElement('div');
+    dom.window.document.body.appendChild(container);
+    const root = createRoot(container);
+    let instance: any = null;
+    const ref = (r: any) => { if (r) instance = r; };
+    act(() => {
+      root.render(React.createElement(Index, {...base, ref} as any));
+    });
+    return {
+      instance,
+      unmount() {
+        act(() => { root.unmount(); });
+        container.remove();
+      }
+    };
+  }
+
+  it('resultsRefから結果一覧のインスタンスに触れる', () => {
+    const m = mountIndex();
+    assert.ok(m.instance.resultsRef.current);
+    m.unmount();
+  });
+
+  it('popstateで結果一覧の選択とソートをリセットする', () => {
+    const m = mountIndex();
+    const results = m.instance.resultsRef.current;
+    act(() => {
+      results.setState({selected_id: 'b1', page: 3, sort_column: 'title', sort_order: 'ascend'});
+    });
+    act(() => {
+      dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+    });
+    assert.equal(results.state.selected_id, '');
+    assert.equal(results.state.page, 0);
+    /* sort_column は従来 sort_key へのタイポでリセットされていなかった */
+    assert.equal(results.state.sort_column, '');
+    assert.equal(results.state.sort_order, '');
+    m.unmount();
+  });
+
+  /*
+   リスナーを解除せずに unmount すると、後続の popstate が unmount 済みインスタンスの
+   onPopState を叩き、剥がされた ref (undefined) への setState で TypeError になっていた。
+   littel-ui のようにマウントし直す使い方で「Cannot read properties of undefined
+   (reading 'setState')」が出ていた原因。
+   */
+  it('unmountするとpopstateに反応しなくなる', () => {
+    const m = mountIndex();
+    let called = 0;
+    m.instance.onPopState = () => { called++; };
+    dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+    assert.equal(called, 1);
+    m.unmount();
+    dom.window.dispatchEvent(new dom.window.PopStateEvent('popstate'));
+    assert.equal(called, 1);
+  });
+
+  it('unmountするとscroll/resizeに反応しなくなる', () => {
+    const m = mountIndex();
+    let called = 0;
+    m.instance.onScroll = () => { called++; };
+    dom.window.dispatchEvent(new dom.window.Event('resize'));
+    assert.equal(called, 1);
+    m.unmount();
+    dom.window.dispatchEvent(new dom.window.Event('resize'));
+    assert.equal(called, 1);
+  });
+
+  it('unmountでwindow.pressKeyを片付ける', () => {
+    const m = mountIndex();
+    assert.equal(typeof dom.window.pressKey, 'function');
+    m.unmount();
+    assert.equal(dom.window.pressKey, undefined);
   });
 });
 
