@@ -123,9 +123,9 @@ export default class Results extends React.Component<Props, State> {
     if (this.api) this.api.kill();
   }
 
-  onSelectBook(e: React.ChangeEvent<HTMLInputElement>) {
+  onSelectBook(e: React.SyntheticEvent) {
     if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
-    let current: Element | null | undefined = e.target;
+    let current: Element | null | undefined = e.target as Element;
     while (current && current.parentNode) {
       if (current.attributes.getNamedItem('data-id')) {
         let hash = current.attributes.getNamedItem('data-id').value;
@@ -161,9 +161,9 @@ export default class Results extends React.Component<Props, State> {
     this.setState({page: data.selected, selected_id: null});
   }
 
-  onSort(e: React.ChangeEvent<HTMLInputElement>) {
+  onSort(e: React.SyntheticEvent) {
     this.removeHash();
-    let target: null | Element & HTMLElement = e.target;
+    let target: null | Element & HTMLElement = e.target as Element & HTMLElement;
     while (target && !target.className.match('sort')) {
       target = target.parentElement;
     }
@@ -198,7 +198,7 @@ export default class Results extends React.Component<Props, State> {
     e = e || (window.event as any);
     if (e.keyCode === 13) {
       e.stopPropagation();
-      this.onSort(e as any);
+      this.onSort(e);
     }
   }
 
