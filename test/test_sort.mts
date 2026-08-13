@@ -40,7 +40,7 @@ describe('出版年の処理', () => {
     it('昭和元年', () => assert.equal(normalizePubdate("昭和元年"), 19260000));
     it('[20--]', () => assert.equal(normalizePubdate("[20--]"), 20000000));
     it('空白文字', () => assert.equal(normalizePubdate(""), 0));
-    it('Null', () => assert.equal(normalizePubdate(null as any), 0));
+    it('Null', () => assert.equal(normalizePubdate(null), 0));
     it('Windows', () => assert.equal(normalizePubdate("Windows"), 0));
     it('令和元年', () => assert.equal(normalizePubdate("令和元年"), 20190000));
     it('平成31年', () => assert.equal(normalizePubdate("平成31年"), 20190000));
@@ -57,7 +57,7 @@ describe('ISBNの正規化', () => {
   /* 10桁以下は13桁と桁を揃えるため、EN SPACE 3つを頭に付けて文字列ソートを成立させる */
   it('10桁は先頭にEN SPACEを3つ付ける', () => assert.equal(normalizeIsbn('4000000000'), '   ' + '4000000000'));
   it('空文字は空文字', () => assert.equal(normalizeIsbn(''), ''));
-  it('undefinedは空文字', () => assert.equal(normalizeIsbn(undefined as any), ''));
+  it('undefinedは空文字', () => assert.equal(normalizeIsbn(undefined), ''));
 });
 
 describe('所蔵の絞り込み', () => {
@@ -111,7 +111,7 @@ describe('所蔵の絞り込み', () => {
   describe('# intersectHoldings', () => {
     it('共通部分を返す', () => assert.deepEqual(intersectHoldings([1, 2, 3], [2, 3, 4]), [2, 3]));
     it('共通がなければ空', () => assert.deepEqual(intersectHoldings([1], [2]), []));
-    it('片方がnullなら空', () => assert.deepEqual(intersectHoldings(null as any, [1]), []));
+    it('片方がnullなら空', () => assert.deepEqual(intersectHoldings(null, [1]), []));
   });
 });
 
@@ -129,13 +129,16 @@ describe('検索中の館の絞り込み', () => {
   });
 
   describe('# unresolvedHoldings', () => {
-    const data = {remains: ['A図書館'], errors: ['B図書館']} as UnitradResult;
+    /** 検索結果を作る。remainsとerrorsだけ差し替える */
+    const result = (remains: Array<string>, errors: Array<string>): UnitradResult => ({
+      uuid: 'u1', version: 1, running: false, books: [], remains, errors
+    });
     it('remainsとerrorsの図書館IDを集める', () =>
-      assert.deepEqual(unresolvedHoldings(data, name_to_id), [1, 2, 3]));
+      assert.deepEqual(unresolvedHoldings(result(['A図書館'], ['B図書館']), name_to_id), [1, 2, 3]));
     it('重複は1回だけ', () =>
-      assert.deepEqual(unresolvedHoldings({remains: ['A図書館'], errors: ['A図書館']} as UnitradResult, name_to_id), [1, 2]));
+      assert.deepEqual(unresolvedHoldings(result(['A図書館'], ['A図書館']), name_to_id), [1, 2]));
     it('未知の館は無視する', () =>
-      assert.deepEqual(unresolvedHoldings({remains: ['不明館'], errors: []} as UnitradResult, name_to_id), []));
+      assert.deepEqual(unresolvedHoldings(result(['不明館'], []), name_to_id), []));
   });
 });
 
