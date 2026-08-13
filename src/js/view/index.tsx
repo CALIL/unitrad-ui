@@ -69,7 +69,7 @@ type Props = {
   welcomeMessage: string | React.ComponentType<any> | null | undefined,
   welcomeTitle: string | null | undefined,
   welcomeLinks: Array<UILink>,
-  freewordPlaceholder: string | null | undefined,  //　フリーワードのプレースホルダー
+  freewordPlaceholder?: string | null,  //　フリーワードのプレースホルダー
   coverImage?: React.ComponentType<any>
 }
 
@@ -95,7 +95,7 @@ export default class Index extends React.Component<Props, State> {
         "includes": []
       }
     ]
-  };
+  } satisfies Partial<Props>;
 
   requestUpdateURL: null | 'search' | 'filter';
   resizeTimer: number | null | undefined;

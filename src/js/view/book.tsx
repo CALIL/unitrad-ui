@@ -31,17 +31,16 @@ type Props = {
   onClose: Function,
   name_to_id: { [key: string]: Array<number> },
   libraries: { [key: number]: string },
-  holdingOrder: Array<number> | null | undefined,
-  customHoldingView: React.ComponentType<any> | null | undefined,
+  holdingOrder?: Array<number> | null,
+  customHoldingView?: React.ComponentType<any> | null,
   customDetailView?: React.ComponentType<any> | null,
   coverImage?: React.ComponentType<any>,
   isbnAdvanced?: boolean,
-  holdingLinkReplacer: Function | null | undefined,
-  remains: Array<string> | null | undefined
+  holdingLinkReplacer?: Function | null,
+  remains?: Array<string> | null
 }
 
 export default class Book extends React.Component<Props, State> {
-  static defaultProps: Props;
   api: api;
   deep_requested: boolean = false;
   state: State = {

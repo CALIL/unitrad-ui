@@ -7,13 +7,14 @@
   "scripts": {
     "start": "node tools/build.mjs debug --conf=./conf/",
     "release": "node tools/build.mjs release --conf=./conf/",
-    "typecheck": "tsc --noEmit",
-    "test": "node --import ./tools/tsx-loader-register.mjs --test test/test_*.mts"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "node --import ./tools/tsx-loader-register.mjs --test test/test_*.mts test/test_*.tsx"
   },
   "directories": {
     "test": "test"
   },
   "devDependencies": {
+    "@types/node": "^22.20.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.5.4",
