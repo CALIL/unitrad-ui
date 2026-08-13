@@ -84,7 +84,7 @@ export default class Results extends React.Component<Props, State> {
       sort_column: '',
       sort_order: '',
       sort_class: [],
-      region: null
+      region: ''
     };
   }
 
@@ -123,12 +123,13 @@ export default class Results extends React.Component<Props, State> {
   }
 
   onSelectBook(e: React.SyntheticEvent) {
-    if (window.getSelection().toString() !== '') return; // 選択中はクリックを処理しない
+    if (window.getSelection()!.toString() !== '') return; // 選択中はクリックを処理しない
     let current: Element | null | undefined = e.target as Element;
     while (current && current.parentNode) {
-      if (current.attributes.getNamedItem('data-id')) {
-        let hash = current.attributes.getNamedItem('data-id').value;
-        if (history.pushState && history.state !== undefined) {
+      const dataId = current.attributes.getNamedItem('data-id');
+      if (dataId) {
+        let hash = dataId.value;
+        if (typeof history.pushState === 'function' && history.state !== undefined) {
           history.pushState('selected_id', '', location.pathname + location.search + '#' + hash);
         }
         this.setState({'selected_id': hash});
@@ -141,7 +142,7 @@ export default class Results extends React.Component<Props, State> {
   // #(hash)を消す
   removeHash() {
     if (location.hash !== '') {
-      if (history.pushState && history.state !== undefined) {
+      if (typeof history.pushState === 'function' && history.state !== undefined) {
         history.replaceState('search', '', location.pathname + location.search);
       } else {
         location.hash = '';
@@ -169,7 +170,7 @@ export default class Results extends React.Component<Props, State> {
     let names = ['triangle'];
     let column = target && target.dataset ? target.dataset.sortColumn : null;
     if (typeof column !== 'string') return;
-    const firstOrders = {
+    const firstOrders: { [key: string]: 'ascend' | 'descend' } = {
       title: 'ascend',
       author: 'ascend',
       publisher: 'ascend',
@@ -177,7 +178,7 @@ export default class Results extends React.Component<Props, State> {
       isbn: 'ascend',
       holdings: 'descend'
     };
-    let nextOrder;
+    let nextOrder: '' | 'ascend' | 'descend';
     let currentOrder: string = (this.state.sort_column === column) ? this.state.sort_order : '';
     if (currentOrder === '') {
       nextOrder = firstOrders[column];
@@ -206,7 +207,7 @@ export default class Results extends React.Component<Props, State> {
   }
 
   render() {
-    let _books = [];
+    let _books: Array<UnitradBook> = [];
     let message: string = '';
     let notfound = false;
     let complete = false;
@@ -318,7 +319,7 @@ export default class Results extends React.Component<Props, State> {
           </div>
           <div
             className={classNames.join(' ')}
-            aria-busy={this.state.result && this.state.result.running}
+            aria-busy={this.state.result ? this.state.result.running : undefined}
             aria-rowcount={_books.length}
             aria-readonly="true"
             role="grid">

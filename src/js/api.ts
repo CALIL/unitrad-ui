@@ -165,7 +165,7 @@ export function isEmptyQuery(query: UnitradQuery | null | undefined): boolean {
  * @param q2 比較先クエリ
  * @returns {boolean}
  */
-export function isEqualQuery(q1: UnitradQuery, q2: UnitradQuery): boolean {
+export function isEqualQuery(q1: UnitradQuery | null | undefined, q2: UnitradQuery | null | undefined): boolean {
   for (const k of FIELDS) {
     if (k === 'region') continue;
     if ((q1 && hasOwn(q1, k) ? (q1 as any)[k] : '') !== (q2 && hasOwn(q2, k) ? (q2 as any)[k] : '')) return false

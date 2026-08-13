@@ -57,13 +57,13 @@ type Props = {
   lazyHidden?: Array<string>, // 遅い検索対象を隠す(システムIDを指定)
   rows: number, // 検索結果の行数
   holdingLinkReplacer?: Function, // 所蔵リンクの置換関数
-  holdingOrder?: Array<number>, // 所蔵リンクの並び順(nullの場合はソートしない)
+  holdingOrder?: Array<number> | null, // 所蔵リンクの並び順(nullの場合はソートしない)
   showLogo: boolean, // ロゴを表示するか
   linkLogo: boolean, // ロゴにリンクするか
   filterTitle?: string, // フィルタのタイトル
   customHoldingView?: React.ComponentType<any>, // カスタム所蔵コンポーネント
   customDetailView?: React.ComponentType<any>, // カスタム資料コンポーネント
-  onSearch?: Function, // 検索イベント
+  onSearch?: Function | null, // 検索イベント
   customNotFoundView?: React.ComponentType<any>, // 見つからないときの表示
   externalLinks: Array<UIExternal>, // 外部サービスへの連携リンク
   welcomeMessage: string | React.ComponentType<any> | null | undefined,
@@ -111,7 +111,7 @@ export default class Index extends React.Component<Props, State> {
     super(props);
     let params = getParamsFromURL();
     let filterItem = getFilter(props.filters, params.filter);
-    let mapping = {};
+    let mapping: { [key: string]: UnitradMapping } = {};
     mapping[this.props.region] = {
       name_to_id: props.name_to_id ? props.name_to_id : {},
       libraries: props.libraries ? props.libraries : {}
@@ -142,7 +142,7 @@ export default class Index extends React.Component<Props, State> {
 
   componentDidMount() {
     window.pressKey = this.boundOnPressKey;
-    if (typeof history !== 'undefined' && history.pushState && history.state !== undefined) {
+    if (typeof history !== 'undefined' && typeof history.pushState === 'function' && history.state !== undefined) {
       window.addEventListener('popstate', this.boundOnPopState);
     }
     window.addEventListener("scroll", this.boundOnScroll);

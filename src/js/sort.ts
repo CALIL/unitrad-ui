@@ -119,16 +119,19 @@ export function holdingsFromBook(book: UnitradBook, includes: Array<number>): nu
  * @param b {Array} 所蔵リスト
  * @returns {Array}
  */
-export function intersectHoldings(a: Array<number>, b: Array<number>): Array<number> {
+export function intersectHoldings(a: Array<number> | null | undefined, b: Array<number> | null | undefined): Array<number> {
   if (!a || !b) return [];
   return a.filter(x => b.indexOf(x) !== -1);
 }
 
-function _stringSorter(a: string, b: string): number {
+function _stringSorter(a: string | null | undefined, b: string | null | undefined): number {
   if (!b && a) return -1;
   if (!a && b) return 1;
-  if (a > b) return 1;
-  if (a < b) return -1;
+  /* ここに来るのは両方とも真か両方とも偽のときだけ。偽どうしは空文字にすると 0 になる */
+  const _a = a ?? '';
+  const _b = b ?? '';
+  if (_a > _b) return 1;
+  if (_a < _b) return -1;
   return 0;
 }
 
@@ -200,7 +203,7 @@ function pubdateSorter(a: UnitradBook, b: UnitradBook): number {
  * ・無効な桁数は空文字列を返す
  * @type {RegExp}
  */
-export function normalizeIsbn(isbn: string): string {
+export function normalizeIsbn(isbn: string | null | undefined): string {
   if (!isbn) return '';
   const _tmp = isbn.replace(/[-]+/g, '');
   if (_tmp.length <= 10) {
@@ -217,7 +220,7 @@ export function normalizeIsbn(isbn: string): string {
  * @param {String || Number} p
  * @returns {Number}
  */
-export function normalizePubdate(p: string | number): number {
+export function normalizePubdate(p: string | number | null | undefined): number {
   const _p = String(p).replace(/元年/g, "1年");
   const _tmp = _p.match(/\d+/g);
   if (_tmp) {
