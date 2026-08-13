@@ -44,24 +44,24 @@ type Props = {
   filter: number,
   filters: Array<UIFilter>,
   excludes: Array<number>,
-  selected_id: string | null | undefined,
+  selected_id?: string | null,
   query: UnitradQuery,
   region: string,
   includes: Array<number>,
   mapping: { [key: string]: UnitradMapping },
-  lazyHidden: Array<string> | null | undefined,
+  lazyHidden?: Array<string> | null,
   externalLinks: Array<UIExternal>,
-  holdingLinkReplacer: Function | null | undefined,
-  holdingOrder: Array<number> | null | undefined,
+  holdingLinkReplacer?: Function | null,
+  holdingOrder?: Array<number> | null,
   rows: number,
-  customHoldingView: React.ComponentType<any> | null | undefined,
-  customDetailView: React.ComponentType<any> | null | undefined,
-  customNotFoundView: React.ComponentType<any> | null | undefined,
+  customHoldingView?: React.ComponentType<any> | null,
+  customDetailView?: React.ComponentType<any> | null,
+  customNotFoundView?: React.ComponentType<any> | null,
   changeFilter: Function,
   hideSide: boolean,
   showLogo: boolean,
-  filterMessage: string | null | undefined,
-  filterTitle: string | null | undefined,
+  filterMessage?: string | null,
+  filterTitle?: string | null,
   is_multiple_region: boolean,
   showFooter?: boolean,
   linkLogo?: boolean,
@@ -70,7 +70,6 @@ type Props = {
 
 
 export default class Results extends React.Component<Props, State> {
-  static defaultProps: Props;
   _query: UnitradQuery;
   api: api;
   started: number;

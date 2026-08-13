@@ -6,6 +6,10 @@
  This software is released under the MIT License.
  http://opensource.org/licenses/mit-license.php
 
+ このファイルは姉妹リポジトリとバイト単位で同一に保つ。リポジトリ固有の型は
+ types.local.d.ts に置き、ここには書かない。手順は README の「型定義の同期」を参照。
+ unitrad-ui はオープンソースなので、顧客名をコメントに書かない。
+
  */
 
 interface Window {
@@ -46,15 +50,15 @@ declare type UnitradResult = {
   remains: Array<string>;
   errors: Array<string>;
   books: Array<UnitradBook>;
-  books_diff: {
-    update: Array<{
-      _idx: number;
-    }>;
+  /* 差分更新のときだけ届く。初回の応答には無い */
+  books_diff?: {
+    /* _idx で既存の書誌を指し、残りのキーだけが差分として届く */
+    update: Array<Partial<UnitradBook> & { _idx: number }>;
     insert: Array<UnitradBook>;
   };
 };
 
-declare type UnitradBook = {
+declare interface UnitradBook {
   /* 図書館IDをキーにした、その館の書誌ページURL */
   url: { [key: string]: string };
   /* 図書館IDをキーにした、その館の書誌ID */
@@ -64,15 +68,15 @@ declare type UnitradBook = {
   author: string;
   publisher: string;
   _isbn: string;
-  isbn: string;
+  isbn: string | null;
   _pubdate: number;
   pubdate: string;
   id: string;
   holdings: Array<number>;
   _holdings: number;
   _holding_key: number;
-  estimated_holdings: Array<number>;
-};
+  estimated_holdings?: Array<number>;
+}
 
 declare type UIFilter = {
   id: number;

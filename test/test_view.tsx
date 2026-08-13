@@ -39,8 +39,12 @@ const Results = (await import('../src/js/view/result.tsx')).default;
 const Book = (await import('../src/js/view/book.tsx')).default;
 const {normalizeQuery} = await import('../src/js/api.ts');
 
+type IndexProps = React.ComponentProps<typeof Index>;
+type ResultsProps = React.ComponentProps<typeof Results>;
+type BookProps = React.ComponentProps<typeof Book>;
+
 /** 書誌データを作る。必要なフィールドだけ差し替える */
-function makeBook(over: any = {}) {
+function makeBook(over: Partial<UnitradBook> = {}): UnitradBook {
   return {
     url: {}, bid: {}, title: 'テスト書名', volume: '', author: '著者名', publisher: '出版者',
     _isbn: '', isbn: '9784000000000', _pubdate: 0, pubdate: '2020', id: 'b1',
@@ -54,40 +58,43 @@ function setSearch(search: string) {
   Object.defineProperty(g, 'location', {value: {search, hash: '', pathname: '/'}, configurable: true, writable: true});
 }
 
-const html = (element: any) => renderToString(element);
+const html = (element: React.ReactElement) => renderToString(element);
 
 describe('DefaultHoldingView', () => {
   it('URLとラベルを描画する', () => {
-    const out = html(React.createElement(DefaultHoldingView, {url: 'https://example.test/x', label: '貸出可'}));
+    const out = html(<DefaultHoldingView url="https://example.test/x" label="貸出可"/>);
     assert.match(out, /href="https:\/\/example\.test\/x"/);
     assert.match(out, /貸出可/);
   });
   it('URLが空ならdisabledを付ける', () => {
-    const out = html(React.createElement(DefaultHoldingView, {url: '', label: 'なし'}));
+    const out = html(<DefaultHoldingView url="" label="なし"/>);
     assert.match(out, /class="[^"]*disabled/);
   });
   it('ラベルが5文字を超えるとx2', () => {
-    const out = html(React.createElement(DefaultHoldingView, {url: 'u', label: '123456'}));
+    const out = html(<DefaultHoldingView url="u" label="123456"/>);
     assert.match(out, /class="x2/);
   });
   it('ラベルが10文字を超えるとx3', () => {
-    const out = html(React.createElement(DefaultHoldingView, {url: 'u', label: '12345678901'}));
+    const out = html(<DefaultHoldingView url="u" label="12345678901"/>);
     assert.match(out, /class="x3/);
   });
   it('別タブで開く指定が入る', () => {
-    const out = html(React.createElement(DefaultHoldingView, {url: 'u', label: 'a'}));
+    const out = html(<DefaultHoldingView url="u" label="a"/>);
     assert.match(out, /target="_blank"/);
     assert.match(out, /rel="noopener"/);
   });
 });
 
 describe('Index（検索ボックス）', () => {
-  const base = {region: 'test', filters: [{id: 0, name: '全域', includes: []}]};
+  const base = {
+    region: 'test',
+    filters: [{id: 0, name: '全域', includes: []}]
+  } satisfies Partial<IndexProps>;
 
   before(() => setSearch(''));
 
   it('simpleモードではフリーワード入力と検索ボタンを出す', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'simple'} as any));
+    const out = html(<Index {...base} mode="simple"/>);
     assert.match(out, /class="emtop simple"/);
     assert.match(out, /id="free"/);
     assert.match(out, /id="searchButton"/);
@@ -95,7 +102,7 @@ describe('Index（検索ボックス）', () => {
   });
 
   it('advancedモードでは各項目の入力欄を出す', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'advanced'} as any));
+    const out = html(<Index {...base} mode="advanced"/>);
     assert.match(out, /class="emtop advanced"/);
     for (const id of ['title', 'author', 'publisher', 'ndc', 'year_start', 'year_end', 'isbn']) {
       assert.match(out, new RegExp(`id="${id}"`), `${id} の入力欄が無い`);
@@ -104,21 +111,21 @@ describe('Index（検索ボックス）', () => {
   });
 
   it('freewordPlaceholderを反映する', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'simple', freewordPlaceholder: '本をさがす'} as any));
+    const out = html(<Index {...base} mode="simple" freewordPlaceholder="本をさがす"/>);
     assert.match(out, /placeholder="本をさがす"/);
   });
 
   it('placeholder未指定なら既定の文言を使う', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'simple'} as any));
+    const out = html(<Index {...base} mode="simple"/>);
     assert.match(out, /placeholder="フリーワード"/);
   });
 
   it('welcomeLinksを対象図書館として並べる', () => {
-    const out = html(React.createElement(Index, {
-      ...base, mode: 'simple',
-      welcomeTitle: 'つぎの図書館をまとめて検索します',
-      welcomeLinks: [{name: 'A図書館', url: 'https://a.test/'}, {name: 'B図書館', url: ''}]
-    } as any));
+    const out = html(
+      <Index {...base} mode="simple"
+             welcomeTitle="つぎの図書館をまとめて検索します"
+             welcomeLinks={[{name: 'A図書館', url: 'https://a.test/'}, {name: 'B図書館', url: ''}]}/>
+    );
     assert.match(out, /targetLibraries/);
     assert.match(out, /つぎの図書館をまとめて検索します/);
     assert.match(out, /href="https:\/\/a\.test\/"/);
@@ -127,43 +134,39 @@ describe('Index（検索ボックス）', () => {
   });
 
   it('welcomeMessageに文字列を渡せる', () => {
-    const out = html(React.createElement(Index, {
-      ...base, mode: 'simple', welcomeMessage: 'ようこそ', welcomeLinks: []
-    } as any));
+    const out = html(<Index {...base} mode="simple" welcomeMessage="ようこそ" welcomeLinks={[]}/>);
     assert.match(out, /ようこそ/);
   });
 
   it('welcomeMessageにコンポーネントを渡せる', () => {
     class Custom extends React.Component {
-      render() { return React.createElement('p', {className: 'custom'}, 'カスタム'); }
+      render() { return <p className="custom">カスタム</p>; }
     }
-    const out = html(React.createElement(Index, {
-      ...base, mode: 'simple', welcomeMessage: Custom, welcomeLinks: []
-    } as any));
+    const out = html(<Index {...base} mode="simple" welcomeMessage={Custom} welcomeLinks={[]}/>);
     assert.match(out, /class="custom"/);
     assert.match(out, /カスタム/);
   });
 
   it('showLogoがtrueならフッターのロゴを出す', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'simple', showLogo: true} as any));
+    const out = html(<Index {...base} mode="simple" showLogo={true}/>);
     assert.match(out, /poweredby/);
   });
 
   it('showLogoがfalseならフッターを出さない', () => {
-    const out = html(React.createElement(Index, {...base, mode: 'simple', showLogo: false} as any));
+    const out = html(<Index {...base} mode="simple" showLogo={false}/>);
     assert.doesNotMatch(out, /poweredby/);
   });
 
   it('URLのクエリから検索語を復元する', () => {
     setSearch('?q=' + encodeURIComponent('ねこ'));
-    const out = html(React.createElement(Index, {...base, mode: 'simple'} as any));
+    const out = html(<Index {...base} mode="simple"/>);
     assert.match(out, /value="ねこ"/);
     setSearch('');
   });
 
   it('URLに詳細検索の項目があればadvancedで開く', () => {
     setSearch('?title=' + encodeURIComponent('いぬ'));
-    const out = html(React.createElement(Index, {...base, mode: 'simple'} as any));
+    const out = html(<Index {...base} mode="simple"/>);
     assert.match(out, /class="emtop advanced"/);
     setSearch('');
   });
@@ -175,7 +178,7 @@ describe('Index（クライアント描画とライフサイクル）', () => {
     region: 'test', mode: 'simple',
     filters: [{id: 0, name: '全域', includes: []}],
     libraries: {1: 'A図書館'}, name_to_id: {'A図書館': [1]}
-  };
+  } satisfies Partial<IndexProps>;
 
   before(() => setSearch(''));
 
@@ -186,7 +189,7 @@ describe('Index（クライアント描画とライフサイクル）', () => {
     let instance: any = null;
     const ref = (r: any) => { if (r) instance = r; };
     act(() => {
-      root.render(React.createElement(Index, {...base, ref} as any));
+      root.render(<Index {...base} ref={ref}/>);
     });
     return {
       instance,
@@ -266,16 +269,16 @@ describe('Results（検索結果）', () => {
     customHoldingView: DefaultHoldingView, customDetailView: null, customNotFoundView: null,
     changeFilter: () => {}, hideSide: false, showLogo: true,
     filterMessage: null, filterTitle: null, is_multiple_region: false
-  };
+  } satisfies Partial<ResultsProps>;
 
   it('検索前は空のコンテナを出す', () => {
-    const out = html(React.createElement(Results, {...base, query: {}} as any));
+    const out = html(<Results {...base} query={{}}/>);
     assert.match(out, /emcontainer/);
     assert.match(out, /emptyall/);
   });
 
   it('hideSideがtrueならサイドを出さない', () => {
-    const out = html(React.createElement(Results, {...base, query: {}, hideSide: true} as any));
+    const out = html(<Results {...base} query={{}} hideSide={true}/>);
     assert.doesNotMatch(out, /emside/);
   });
 
@@ -285,7 +288,7 @@ describe('Results（検索結果）', () => {
    componentDidMountが検索APIを起こさない。
    */
   describe('結果を受け取ったあと', () => {
-    function mountWithResult(result: any, props: any = {}) {
+    function mountWithResult(result: UnitradResult, props: Partial<ResultsProps> = {}) {
       const container = dom.window.document.createElement('div');
       dom.window.document.body.appendChild(container);
       const root = createRoot(container);
@@ -295,7 +298,7 @@ describe('Results（検索結果）', () => {
 
       /* まず空クエリでマウントする。componentDidMountが検索APIを起こさない */
       act(() => {
-        root.render(React.createElement(Results, {...base, ...props, query: {}, ref} as any));
+        root.render(<Results {...base} {...props} query={{}} ref={ref}/>);
       });
 
       if (Object.keys(query).length > 0) {
@@ -304,7 +307,7 @@ describe('Results（検索結果）', () => {
         instance._query = normalizeQuery(query);
         instance._query.region = base.region;
         act(() => {
-          root.render(React.createElement(Results, {...base, ...props, query, ref} as any));
+          root.render(<Results {...base} {...props} query={query} ref={ref}/>);
         });
       }
 
@@ -315,7 +318,7 @@ describe('Results（検索結果）', () => {
       return out;
     }
 
-    const result = (over: any = {}) => ({
+    const result = (over: Partial<UnitradResult> = {}): UnitradResult => ({
       uuid: 'u1', version: 1, running: false, remains: [], errors: [],
       books: [makeBook()], ...over
     });
@@ -370,10 +373,10 @@ describe('Book（書誌の行）', () => {
     name_to_id: {'A図書館': [1]}, libraries: {1: 'A図書館', 2: 'B図書館'},
     holdingOrder: null, customHoldingView: DefaultHoldingView,
     holdingLinkReplacer: null, remains: null
-  };
+  } satisfies Partial<BookProps>;
 
   it('書誌の各項目を描画する', () => {
-    const out = html(React.createElement(Book, {...base, book: makeBook(), opened: false} as any));
+    const out = html(<Book {...base} book={makeBook()} opened={false}/>);
     assert.match(out, /class="row book /);
     assert.match(out, /テスト書名/);
     assert.match(out, /著者名/);
@@ -382,50 +385,48 @@ describe('Book（書誌の行）', () => {
   });
 
   it('data-idに書誌IDを入れる', () => {
-    const out = html(React.createElement(Book, {...base, book: makeBook({id: 'xyz'}), opened: false} as any));
+    const out = html(<Book {...base} book={makeBook({id: 'xyz'})} opened={false}/>);
     assert.match(out, /data-id="xyz"/);
   });
 
   it('行番号をaria-rowindexに入れる', () => {
-    const out = html(React.createElement(Book, {...base, book: makeBook(), opened: false, index: 7} as any));
+    const out = html(<Book {...base} book={makeBook()} opened={false} index={7}/>);
     assert.match(out, /aria-rowindex="7"/);
   });
 
   it('閉じているときはaria-expandedがfalse', () => {
-    const out = html(React.createElement(Book, {...base, book: makeBook(), opened: false} as any));
+    const out = html(<Book {...base} book={makeBook()} opened={false}/>);
     assert.match(out, /aria-expanded="false"/);
   });
 
   /* ISBNがあるとdeep searchのタイマーが動くので、展開時のテストではISBNを空にする */
   it('展開するとopenedクラスとaria-expandedが変わる', () => {
-    const out = html(React.createElement(Book, {...base, book: makeBook({isbn: ''}), opened: true} as any));
+    const out = html(<Book {...base} book={makeBook({isbn: ''})} opened={true}/>);
     assert.match(out, /class="row book opened/);
     assert.match(out, /aria-expanded="true"/);
   });
 
   it('展開すると所蔵館へのリンクを出す', () => {
-    const out = html(React.createElement(Book, {
-      ...base, opened: true,
-      book: makeBook({isbn: '', holdings: [1], url: {'1': 'https://lib.test/book'}})
-    } as any));
+    const out = html(
+      <Book {...base} opened={true}
+            book={makeBook({isbn: '', holdings: [1], url: {'1': 'https://lib.test/book'}})}/>
+    );
     assert.match(out, /A図書館/);
     assert.match(out, /https:\/\/lib\.test\/book/);
   });
 
   it('holdingLinkReplacerでリンクを差し替えられる', () => {
-    const out = html(React.createElement(Book, {
-      ...base, opened: true,
-      holdingLinkReplacer: (url: string) => url.replace('lib.test', 'proxy.test'),
-      book: makeBook({isbn: '', holdings: [1], url: {'1': 'https://lib.test/book'}})
-    } as any));
+    const out = html(
+      <Book {...base} opened={true}
+            holdingLinkReplacer={(url: string) => url.replace('lib.test', 'proxy.test')}
+            book={makeBook({isbn: '', holdings: [1], url: {'1': 'https://lib.test/book'}})}/>
+    );
     assert.match(out, /proxy\.test/);
     assert.doesNotMatch(out, /lib\.test/);
   });
 
   it('所蔵数を出す', () => {
-    const out = html(React.createElement(Book, {
-      ...base, book: makeBook({holdings: [1, 2]}), opened: false
-    } as any));
+    const out = html(<Book {...base} book={makeBook({holdings: [1, 2]})} opened={false}/>);
     assert.match(out, /class="count/);
   });
 });
