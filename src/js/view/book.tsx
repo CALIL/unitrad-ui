@@ -12,9 +12,16 @@ import React from 'react';
 import {api} from '../api'
 import {processExcludes, unresolvedHoldings, countHoldings, intersectHoldings} from '../sort'
 
+/* doUpdate が組み立てる所蔵の集約。書誌の全項目は持たない */
+type BookDeep = {
+  url: { [key: string]: string },
+  holdings: Array<number>,
+  bid: { [key: string]: string }
+};
+
 type State = {
   uuid: string | null | undefined,
-  book_deep: UnitradBook | null | undefined,
+  book_deep: BookDeep | null | undefined,
   unresolvedHoldings: Array<number>,
   remains?: Array<string> | null
 };
@@ -53,7 +60,7 @@ export default class Book extends React.Component<Props, State> {
     if (this.props.opened && !this.api) {
       console.log('start deep search');
       this.api = new api({
-        isbn: this.props.book.isbn,
+        isbn: this.props.book.isbn ?? undefined,
         region: this.props.region
       }, this.doUpdate.bind(this));
     }
@@ -63,30 +70,29 @@ export default class Book extends React.Component<Props, State> {
     processExcludes(data.books, this.props.excludes);
 
     // 高精度化実験
-    let book_deep;
+    let book_deep: BookDeep | null;
     if (data.books.length >= 1) {
-      if (!book_deep) {
-        book_deep = {
-          url: {},
-          holdings: [],
-          bid: {}
-        };
-      }
+      const deep: BookDeep = {
+        url: {},
+        holdings: [],
+        bid: {}
+      };
       data.books.map((book) => {
         // 検索結果が別のISBNの場合には無視する
         if (book.id.indexOf('-') === -1 && book.id !== this.props.book.id) {
           return
         }
-        book_deep.holdings = [...book_deep.holdings, ...book.holdings];
+        deep.holdings = [...deep.holdings, ...book.holdings];
         for (let id in book.url) {
           if (Object.prototype.hasOwnProperty.call(book.url, id)) {
-            if (!book_deep.url.hasOwnProperty(id)) {
-              book_deep.url[id] = book.url[id];
-              book_deep.bid[id] = book.id;
+            if (!deep.url.hasOwnProperty(id)) {
+              deep.url[id] = book.url[id];
+              deep.bid[id] = book.id;
             }
           }
         }
       })
+      book_deep = deep;
     } else {
       book_deep = null;
     }
@@ -112,6 +118,9 @@ export default class Book extends React.Component<Props, State> {
   }
 
   render() {
+    /* Index の defaultProps が DefaultHoldingView を入れるので実際は必ず渡ってくる */
+    const CustomHoldingView = this.props.customHoldingView!;
+
     /* 有効な所蔵情報を集約する
      * ・現在Deep検索中（またはエラー）で、推定所蔵データがあるものは追加
      * ・すべての確定所蔵は追加
@@ -140,8 +149,8 @@ export default class Book extends React.Component<Props, State> {
                ((this.props.book.publisher) ? "出版者。" + this.props.book.publisher + "。" : "") +
                ((this.props.book.pubdate) ? "出版年。" + this.props.book.pubdate + "。" : "") +
                ((this.props.book.isbn === '' || this.props.book.isbn === null) ? '' : 'ISBNあり。'))}
-           onKeyUp={!this.props.opened ? this.onKeyUp.bind(this) : null}
-           onClick={!this.props.opened ? this.props.onSelect.bind(this) : null}>
+           onKeyUp={!this.props.opened ? this.onKeyUp.bind(this) : undefined}
+           onClick={!this.props.opened ? this.props.onSelect.bind(this) : undefined}>
         {(() => {
           if (this.props.coverImage) {
             return (
@@ -284,7 +293,7 @@ export default class Book extends React.Component<Props, State> {
                       if (url && this.props.holdingLinkReplacer) url = this.props.holdingLinkReplacer(url);
 
                       return (
-                        <this.props.customHoldingView url={url}
+                        <CustomHoldingView url={url}
                                                       key={holding}
                                                       uuid={uuid}
                                                       libid={holding}

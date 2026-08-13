@@ -52,8 +52,8 @@ describe('Support Functions', () => {
     it('リージョンのみ指定する', () => assert.equal(isEmptyQuery({region: "kyoto"}), true));
   });
   describe('#isEqualQuery', () => {
-    it('undefined==空', () => assert.equal(isEqualQuery(undefined as any, {}), true));
-    it('undefined!=タイトル', () => assert.equal(isEqualQuery(undefined as any, {title: "テスト"}), false));
+    it('undefined==空', () => assert.equal(isEqualQuery(undefined, {}), true));
+    it('undefined!=タイトル', () => assert.equal(isEqualQuery(undefined, {title: "テスト"}), false));
     it('空==空', () => assert.equal(isEqualQuery({}, {}), true));
     it('タイトル!=空', () => assert.equal(isEqualQuery({title: "テスト"}, {}), false));
     it('タイトル==タイトル', () => assert.equal(isEqualQuery({title: "テスト"}, {title: "テスト"}), true));
@@ -190,7 +190,8 @@ describe('APIの通信', () => {
       const instance = new api({free: 'x'} as any, (d) => { received = d; });
       await flush();
       assert.equal(fetched.length, 1, '1回目が失敗している');
-      assert.equal(received, null);
+      /* assert.equal は表明関数なので received を null に絞り込んでしまう。ok で受ける */
+      assert.ok(received === null, '1回目では受け取っていない');
       mock.timers.tick(1000);
       await flush();
       instance.kill();
