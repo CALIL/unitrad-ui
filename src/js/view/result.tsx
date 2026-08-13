@@ -70,9 +70,9 @@ type Props = {
 
 
 export default class Results extends React.Component<Props, State> {
-  _query: UnitradQuery;
-  api: api;
-  started: number;
+  _query: UnitradQuery | undefined;
+  api: api | undefined;
+  started: number | undefined;
   ariaTime: number | null | undefined;
 
   constructor(props: Props) {
