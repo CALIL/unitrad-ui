@@ -35,7 +35,7 @@ export class api {
    */
   callback: (data: UnitradResult) => void;
   killed: boolean;
-  data: UnitradResult;
+  data: UnitradResult | undefined;
 
   constructor(query: UnitradQuery, callback: (data: UnitradResult) => void) {
     this.callback = callback;
@@ -64,6 +64,7 @@ export class api {
 
   polling() {
     if (!this.killed) {
+      if (!this.data) return;
       _request('polling')
         .query({
           uuid: this.data.uuid,
@@ -84,6 +85,7 @@ export class api {
   receive(data: UnitradResult) {
     if (!this.killed) {
       if (data.books_diff) {
+        if (!this.data) return;
         Array.prototype.push.apply(this.data.books, data.books_diff.insert);
         for (const key in data) {
           if (hasOwn(data, key) && key !== 'books_diff') {

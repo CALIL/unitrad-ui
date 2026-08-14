@@ -12,12 +12,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
 
-    // strictPropertyInitialization だけ残件がある（5件）。api.ts の data、book.tsx の api、
-    // result.tsx の _query / api / started で、いずれも constructor ではなく
-    // componentDidMount や doDeepSearch で代入される。定義代入アサーションで黙らせるより、
-    // 実際に undefined を取りうることを型で認めて呼び出し側を直すのが筋なので、別途行う。
-    "strict": true,
-    "strictPropertyInitialization": false
+    "strict": true
   },
   "include": ["src/**/*"]
 }

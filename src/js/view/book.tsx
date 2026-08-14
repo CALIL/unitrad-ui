@@ -48,7 +48,7 @@ type Props = {
 }
 
 export default class Book extends React.Component<Props, State> {
-  api: api;
+  api: api | undefined;
   deep_requested: boolean = false;
   state: State = {
     uuid: null,
