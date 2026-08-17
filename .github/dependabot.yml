@@ -40,6 +40,16 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@types/react-dom"
         update-types: ["version-update:semver-major"]
+      # @types/node のメジャーは Node.js 本体のメジャーに対応しているので、
+      # サポート下限（package.json の engines = >=22）より先に上げてはいけない。
+      # 上げると新しい Node.js で追加された API を tsc が通してしまい、
+      # engines を満たすはずの Node.js 22 環境で初めて落ちる。
+      #
+      # CI では気づけない。node-version-file が engines の >=22 を解決するので
+      # ランナーには最新の 24 系が入り、22 では無い API も動いてしまう。
+      # Node.js を上げるときに engines と一緒に手で上げる。
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-patch:
         patterns:
