@@ -30,16 +30,6 @@ updates:
       default-days: 7
       semver-major-days: 30
     ignore:
-      # react のメジャー更新は周辺ライブラリの対応状況をまとめて確認してから
-      # 手動で判断する。詳細は Todoist を参照
-      - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/react"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/react-dom"
-        update-types: ["version-update:semver-major"]
       # @types/node のメジャーは Node.js 本体のメジャーに対応しているので、
       # サポート下限（package.json の engines = >=22）より先に上げてはいけない。
       # 上げると新しい Node.js で追加された API を tsc が通してしまい、
