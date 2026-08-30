@@ -39,7 +39,7 @@ type Props = {
   name_to_id: { [key: string]: Array<number> },
   libraries: { [key: number]: string },
   holdingOrder?: Array<number> | null,
-  customHoldingView?: React.ComponentType<any> | null,
+  customHoldingView: React.ComponentType<any>,
   customDetailView?: React.ComponentType<any> | null,
   coverImage?: React.ComponentType<any>,
   isbnAdvanced?: boolean,
@@ -118,8 +118,8 @@ export default class Book extends React.Component<Props, State> {
   }
 
   render() {
-    /* Index の defaultProps が DefaultHoldingView を入れるので実際は必ず渡ってくる */
-    const CustomHoldingView = this.props.customHoldingView!;
+    /* Index が customHoldingView の未指定・null を DefaultHoldingView に補って渡すため必ず値がある */
+    const CustomHoldingView = this.props.customHoldingView;
 
     /* 有効な所蔵情報を集約する
      * ・現在Deep検索中（またはエラー）で、推定所蔵データがあるものは追加

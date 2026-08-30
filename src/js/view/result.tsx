@@ -54,7 +54,7 @@ type Props = {
   holdingLinkReplacer?: Function | null,
   holdingOrder?: Array<number> | null,
   rows: number,
-  customHoldingView?: React.ComponentType<any> | null,
+  customHoldingView: React.ComponentType<any>,
   customDetailView?: React.ComponentType<any> | null,
   customNotFoundView?: React.ComponentType<any> | null,
   changeFilter: Function,
