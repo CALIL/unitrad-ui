@@ -447,7 +447,7 @@ export default class Index extends React.Component<Props, State> {
                  holdingLinkReplacer={this.props.holdingLinkReplacer}
                  holdingOrder={this.props.holdingOrder}
                  externalLinks={this.props.externalLinks}
-                 customHoldingView={this.props.customHoldingView}
+                 customHoldingView={this.props.customHoldingView ?? DefaultHoldingView}
                  customDetailView={this.props.customDetailView}
                  customNotFoundView={this.props.customNotFoundView}
                  query={this.state.established_query}
