@@ -170,6 +170,14 @@ describe('Index（検索ボックス）', () => {
     assert.match(out, /class="emtop advanced"/);
     setSearch('');
   });
+
+  /* URLエンコードの解読はコンストラクタで走るので、例外を投げると画面ごと出なくなる */
+  it('URLエンコードが壊れていても検索ボックスを描画する', () => {
+    setSearch('?q=%E6%97%A5%E6%9C%25A');
+    const out = html(<Index {...base} mode="simple"/>);
+    assert.match(out, /class="emtop simple"/);
+    setSearch('');
+  });
 });
 
 describe('Index（クライアント描画とライフサイクル）', () => {
