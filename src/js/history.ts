@@ -17,6 +17,21 @@ function locationEnabled(): boolean {
 }
 
 /**
+ * URLエンコードを解く
+ * 壊れたパーセント列（?q=%E6%9C%25A 等）で例外を投げると、検索ボックスごとマウントされない
+ * @param {String|undefined} value
+ * @returns {String} 解けなければ空文字
+ */
+function safeDecode(value: string | undefined): string {
+  if (value === undefined) return '';
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return '';
+  }
+}
+
+/**
  * URLクエリー文字列をqueryオブジェクトに変換
  * @param {String} text
  * @returns {Object} queryオブジェクト
@@ -29,9 +44,9 @@ function queryParse(text: string): URLQuery {
     const _tmp = kv.split('=');
     const _k = _tmp[0];
     if (Object.prototype.hasOwnProperty.call(tmp, _k)) {
-      tmp[_k] = decodeURIComponent(_tmp[1]);
+      tmp[_k] = safeDecode(_tmp[1]);
     } else {
-      unknown[_k] = decodeURIComponent(_tmp[1]);
+      unknown[_k] = safeDecode(_tmp[1]);
     }
   });
   // OpenURLに関する処理

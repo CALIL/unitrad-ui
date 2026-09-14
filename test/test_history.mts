@@ -47,6 +47,30 @@ describe('URLパラメータの読み取り', () => {
     });
   });
 
+  /* 壊れたクエリで例外を投げると、呼び出し元のコンストラクタごと落ちて画面が出ない */
+  describe('# getParamsFromURL（壊れたURLエンコード）', () => {
+    it('途中で切れたパーセント列は空として扱う', () => {
+      setLocation('?q=%E6%97%A5%E6%9C%25A');
+      assert.equal(getParamsFromURL().free, '');
+    });
+    it('不完全なUTF-8でも例外にしない', () => {
+      setLocation('?q=%E6%97%A5%E6%9C');
+      assert.equal(getParamsFromURL().free, '');
+    });
+    it('単独の%でも例外にしない', () => {
+      setLocation('?q=%');
+      assert.equal(getParamsFromURL().free, '');
+    });
+    it('壊れているのが未知のパラメータでも、他の項目は読める', () => {
+      setLocation('?q=%E3%83%86%E3%82%B9%E3%83%88&fbclid=abc%');
+      assert.equal(getParamsFromURL().free, 'テスト');
+    });
+    it('値の無いパラメータは空にする', () => {
+      setLocation('?q');
+      assert.equal(getParamsFromURL().free, '');
+    });
+  });
+
   /* OpenURL(Z39.88-2004)で渡された書誌情報を検索条件に流し込む */
   describe('# getParamsFromURL（OpenURL）', () => {
     it('url_verが無ければOpenURLとして扱わない', () => {
