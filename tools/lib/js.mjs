@@ -52,6 +52,11 @@ export async function buildJs({repoRoot, configDir, destDir, production}) {
     define: {'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development')},
     banner: {js: confjs},
     minify: production,
+    /*
+     既定のASCII出力だと日本語が \uXXXX にエスケープされ、replace_js の日本語の
+     match が一致しなくなる。gulp時代の出力と同じくUTF-8のまま出す
+     */
+    charset: 'utf8',
     sourcemap: production ? false : 'inline',
     target: targets,
     /*
